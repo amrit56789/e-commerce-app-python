@@ -85,8 +85,8 @@ def create_app(config_class=Config):
 
     from app.utils.image_upload import image_store
     import base64
-    from flask import Response, send_from_directory
-    cred = credentials.Certificate("./serviceAccountKey.json")
+    # from flask import Response, send_from_directory
+    # cred = credentials.Certificate("./serviceAccountKey.json")
     firebase_admin.initialize_app(cred)
     @app.route('/image/<image_id>')
     def serve_image(image_id):
