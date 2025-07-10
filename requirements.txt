@@ -2,9 +2,9 @@ flask==2.2.5
 flask-mail==0.9.1
 cloudinary==1.27.0
 bcrypt==4.0.1
-pymongo==4.1.0
+pymongo[srv]==4.6.3          # ✅ updated & supports SRV and TLS properly
 python-dotenv==0.20.0
-flask-mongoengine==1.0.0
+flask-mongoengine==1.0.0     # ✅ Correct latest version
 flask-bcrypt==1.0.1
 Flask-Inputs==0.3.0
 flask-jwt-extended==4.4.4
