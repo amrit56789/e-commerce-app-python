@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+
+{% block title %}Order Details - {{ order.order_number }}{% endblock %}
+
+{% block admin_content %}
+<div class="bg-white rounded-xl shadow-sm p-4 sm:p-6 max-w-full mx-auto">
+  <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+    <div>
+      <h1 class="text-xl sm:text-2xl font-semibold text-gray-800">Order #{{ order.order_number }}</h1>
+      <p class="text-sm text-gray-500 mt-1">Placed on {{ order.created_at.strftime('%b %d, %Y at %I:%M %p') }}</p>
+    </div>
+    <div class="flex gap-2 sm:gap-3">
+      <a href="{{ url_for('admin_api.product_order_list_page') }}" 
+         class="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 transition duration-150">
+        Back to Orders
+      </a>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Order Summary -->
+    <div class="lg:col-span-2 space-y-6">
+      <!-- Order Status -->
+      <div class="bg-gray-50 p-4 rounded-lg">
+        <h2 class="text-lg font-medium text-gray-800 mb-3">Order Status</h2>
+        <div class="flex flex-wrap gap-3">
+          <div class="flex-1 min-w-[150px]">
+            <p class="text-sm text-gray-500">Current Status</p>
+            <p class="text-sm font-medium mt-1">
+              <span class="px-2 py-1 rounded bg-blue-100 text-blue-800">
+                {{ order.status|title }}
+              </span>
+            </p>
+          </div>
+          <div class="flex-1 min-w-[150px]">
+            <p class="text-sm text-gray-500">Payment Status</p>
+            <p class="text-sm font-medium mt-1">
+              <span class="px-2 py-1 rounded 
+                {% if order.payment_status == 'paid' %}bg-green-100 text-green-800
+                {% elif order.payment_status == 'pending' %}bg-yellow-100 text-yellow-800
+                {% else %}bg-red-100 text-red-800{% endif %}">
+                {{ order.payment_status|title }}
+              </span>
+            </p>
+          </div>
+          <div class="flex-1 min-w-[150px]">
+            <p class="text-sm text-gray-500">Payment Method</p>
+            <p class="text-sm font-medium mt-1">{{ order.payment_method|default('N/A')|title }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Order Items -->
+      <div class="bg-gray-50 p-4 rounded-lg">
+        <h2 class="text-lg font-medium text-gray-800 mb-3">Order Items</h2>
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-100">
+              <tr>
+                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
+                <th class="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">Price</th>
+                <th class="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">Qty</th>
+                <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Total</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+              {% for item in order.items %}
+              <tr>
+                <td class="px-4 py-3 whitespace-nowrap">
+                  <div class="flex items-center">
+                    <div class="flex-shrink-0 h-10 w-10">
+                      <img class="h-10 w-10 rounded" src="{{ item.product_image or url_for('static', filename='images/default-product.png') }}" alt="">
+                    </div>
+                    <div class="ml-4">
+                      <div class="text-sm font-medium text-gray-900">{{ item.product_name }}</div>
+                      <div class="text-sm text-gray-500">SKU: {{ item.sku }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-center text-sm text-gray-500">
+                  ${{ "%.2f"|format(item.price) }}
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-center text-sm text-gray-500">
+                  {{ item.quantity }}
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-right text-sm font-medium text-gray-900">
+                  ${{ "%.2f"|format(item.price * item.quantity) }}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Order Notes -->
+      {% if order.notes %}
+      <div class="bg-gray-50 p-4 rounded-lg">
+        <h2 class="text-lg font-medium text-gray-800 mb-3">Order Notes</h2>
+        <p class="text-sm text-gray-700">{{ order.notes }}</p>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Order Summary Sidebar -->
+    <div class="space-y-6">
+      <!-- Customer Information -->
+      <div class="bg-gray-50 p-4 rounded-lg">
+        <h2 class="text-lg font-medium text-gray-800 mb-3">Customer</h2>
+        <div class="space-y-2">
+          <p class="text-sm">
+            <span class="font-medium text-gray-700">Name:</span> 
+            <span class="text-gray-600">{{ order.customer_name or customer.name if customer else 'N/A' }}</span>
+          </p>
+          <p class="text-sm">
+            <span class="font-medium text-gray-700">Email:</span> 
+            <span class="text-gray-600">{{ order.customer_email or customer.email if customer else 'N/A' }}</span>
+          </p>
+          <p class="text-sm">
+            <span class="font-medium text-gray-700">Phone:</span> 
+            <span class="text-gray-600">{{ order.customer_phone or customer.phone if customer else 'N/A' }}</span>
+          </p>
+        </div>
+      </div>
+
+      <!-- Shipping Address -->
+      <div class="bg-gray-50 p-4 rounded-lg">
+        <h2 class="text-lg font-medium text-gray-800 mb-3">Shipping Address</h2>
+        <address class="text-sm not-italic text-gray-600 space-y-1">
+          <div>{{ order.shipping_address.name }}</div>
+          <div>{{ order.shipping_address.street1 }}</div>
+          {% if order.shipping_address.street2 %}
+          <div>{{ order.shipping_address.street2 }}</div>
+          {% endif %}
+          <div>
+            {{ order.shipping_address.city }}, 
+            {{ order.shipping_address.state }} 
+            {{ order.shipping_address.postal_code }}
+          </div>
+          <div>{{ order.shipping_address.country }}</div>
+          <div class="mt-2">Phone: {{ order.shipping_address.phone }}</div>
+        </address>
+      </div>
+
+      <!-- Order Totals -->
+      <div class="bg-gray-50 p-4 rounded-lg">
+        <h2 class="text-lg font-medium text-gray-800 mb-3">Order Summary</h2>
+        <div class="space-y-2">
+          <div class="flex justify-between text-sm">
+            <span class="text-gray-600">Subtotal</span>
+            <span class="text-gray-900">${{ "%.2f"|format(order.subtotal) }}</span>
+          </div>
+          {% if order.discount_amount > 0 %}
+          <div class="flex justify-between text-sm">
+            <span class="text-gray-600">Discount</span>
+            <span class="text-red-600">-${{ "%.2f"|format(order.discount_amount) }}</span>
+          </div>
+          {% endif %}
+          <div class="flex justify-between text-sm">
+            <span class="text-gray-600">Shipping</span>
+            <span class="text-gray-900">${{ "%.2f"|format(order.shipping_cost) }}</span>
+          </div>
+          {% if order.tax_amount > 0 %}
+          <div class="flex justify-between text-sm">
+            <span class="text-gray-600">Tax</span>
+            <span class="text-gray-900">${{ "%.2f"|format(order.tax_amount) }}</span>
+          </div>
+          {% endif %}
+          <div class="flex justify-between text-sm font-medium border-t border-gray-200 pt-2 mt-2">
+            <span class="text-gray-900">Total</span>
+            <span class="text-gray-900">${{ "%.2f"|format(order.total_amount) }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

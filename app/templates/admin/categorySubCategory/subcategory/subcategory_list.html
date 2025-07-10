@@ -1,0 +1,385 @@
+{% extends "base.html" %}
+
+{% block title %}Subcategory List{% endblock %}
+
+{% set category_headers = ['Image', 'Category', 'Subcategory', 'Description', 'Actions'] %}
+
+{% block admin_content %}
+<div class="bg-white rounded-lg shadow p-6 mx-auto">
+    <h1 class="text-3xl font-bold mb-8 text-center text-gray-800">Subcategory List</h1>
+
+    <div id="loader" class="hidden fixed inset-0 bg-gray-100 bg-opacity-50 flex items-center justify-center z-50">
+        <div class="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+    </div>
+
+    {% include '/components/deleteModal.html' %}
+
+    <div class="flex justify-between items-end xl:flex-row gap-y-3 gap-x-8 mb-6">
+        <div class="flex items-center space-x-6">
+            <div class="flex flex-col items-start gap-2 w-64 lg:w-80 xl:w-auto">
+                <label class="block text-sm lg:text-base font-medium text-black">Search by Category</label>
+                <div class="relative w-64 lg:w-80">
+                    <input type="text" id="category-search" placeholder="Type to search categories..."
+                        class="border w-full border-gray-300 rounded-lg px-4 py-3 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                        autocomplete="off">
+                    <div id="category-search-results"
+                        class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg hidden max-h-60 overflow-auto">
+                    </div>
+                    <span
+                        class="material-symbols-outlined absolute top-1/2 -translate-y-1/2 right-3 text-gray-500 pointer-events-none">
+                        search
+                    </span>
+                </div>
+                <input type="hidden" id="selected-category-id" value="">
+            </div>
+        </div>
+
+        <div class="flex items-center gap-5 mt-4 xl:mt-0">
+            <div class="flex justify-end">
+                <a href="{{ url_for('admin_api.add_subcategory_page') }}"
+                    class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-gray-400 disabled:text-gray-700 text-sm">
+                    Add New Sub Category
+                </a>
+            </div>
+            <a href="#" id="clear-filter"
+                class="text-sm font-medium px-4 py-3 border border-red-500 rounded-lg text-red-500 hover:bg-red-50 transition">
+                Clear Filter
+            </a>
+        </div>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    {% for header in category_headers %}
+                    <th scope="col"
+                        class="border border-gray-200 px-3 py-3 md:px-6 md:py-4 text-xs font-medium text-gray-500 uppercase tracking-wider text-center">
+                        {{ header }}
+                    </th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200" id="subcategory-table-body">
+                {% for subcategory in subcategories %}
+                <tr class="hover:bg-gray-50">
+                    <td class="px-3 py-3 md:px-6 md:py-4 text-sm border border-gray-200 text-center">
+                        <div class="flex-shrink-0 h-10 w-10 mx-auto">
+                            <img class="h-10 w-10 rounded-full object-cover" src="{{ subcategory.img_url }}"
+                                alt="{{ subcategory.name }}">
+                        </div>
+                    </td>
+                    <td class="px-3 py-3 md:px-6 md:py-4 text-sm border border-gray-200 text-center">
+                        <div class="text-xs text-gray-500">{{ subcategory.category.name }}</div>
+                    </td>
+                    <td class="px-3 py-3 md:px-6 md:py-4 text-sm border border-gray-200 text-center">
+                        <div class="text-sm font-medium text-gray-900">{{ subcategory.name }}</div>
+                    </td>
+                    <td class="px-3 py-3 md:px-6 md:py-4 text-sm border border-gray-200 text-center">
+                        <div class="text-sm text-gray-500 max-w-xs mx-auto truncate relative group">
+                            {{ subcategory.description|striptags|truncate(100) }}
+                            {% if subcategory.description|length > 100 %}
+                            <span
+                                class="absolute hidden group-hover:block w-64 bg-black text-white text-xs rounded p-2 z-10 left-1/2 -translate-x-1/2 top-full mt-2">
+                                {{ subcategory.description|striptags }}
+                            </span>
+                            {% endif %}
+                        </div>
+                    </td>
+
+                    <td class="px-3 py-3 md:px-6 md:py-4 text-sm border border-gray-200 text-center font-medium">
+                        <a href="/sub-category/edit/{{ subcategory.id }}"
+                            class="text-indigo-600 hover:text-indigo-900 mr-4">Edit</a>
+                        <button type="button" class="text-red-600 hover:text-red-900 delete-subcategory-btn"
+                            data-subcategory-id="{{ subcategory.id }}"
+                            data-subcategory-name="{{ subcategory.name }}">Delete</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if subcategories|length == 0 %}
+    <p class="text-center text-gray-500 mt-10" id="no-subcategories">No subcategories found.</p>
+    {% else %}
+    <p class="text-center text-gray-500 mt-10 hidden" id="no-subcategories">No subcategories found.</p>
+    {% endif %}
+
+    <div class="flex flex-col sm:flex-row items-center justify-between mt-8 gap-4">
+        <div class="flex items-center gap-2 relative w-fit">
+            <span class="text-sm text-gray-600">Items per page:</span>
+            <div class="relative">
+                <select id="items-per-page"
+                    class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10 appearance-none">
+                    {% for amount in [10, 20, 50, 100] %}
+                    <option value="{{ amount }}" {% if limit==amount %}selected{% endif %}>
+                        {{ amount }}
+                    </option>
+                    {% endfor %}
+                </select>
+                <span
+                    class="material-symbols-outlined pointer-events-none absolute right-1 top-1/2 transform -translate-y-1/2 text-gray-500">
+                    expand_more
+                </span>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2" id="pagination">
+            {% if pagination.has_prev %}
+            <a href="#" data-page="{{ pagination.prev_num }}"
+                class="px-4 py-2 border text-sm rounded-lg hover:bg-gray-100 transition subCategories-pagination-link">
+                Previous
+            </a>
+            {% else %}
+            <span class="px-4 py-2 border rounded-lg text-base text-gray-400 cursor-not-allowed">Previous</span>
+            {% endif %}
+
+            <span class="px-4 py-2 text-sm" id="page-info">
+                Page {{ pagination.page }} of {{ pagination.pages }}
+            </span>
+
+            {% if pagination.has_next %}
+            <a href="#" data-page="{{ pagination.next_num }}"
+                class="px-4 py-2 border text-sm rounded-lg hover:bg-gray-100 transition subCategories-pagination-link">
+                Next
+            </a>
+            {% else %}
+            <span class="px-4 py-2 border rounded-lg text-gray-400 cursor-not-allowed">Next</span>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const loader = document.getElementById('loader');
+        const clearFilterButton = document.getElementById('clear-filter');
+        const subcategoryTableBody = document.getElementById('subcategory-table-body');
+        const itemsPerPageSelect = document.getElementById('items-per-page');
+        const paginationDiv = document.getElementById('pagination');
+        const noSubcategoriesMessage = document.getElementById('no-subcategories');
+        const pageInfo = document.getElementById('page-info');
+        let currentPage = "{{ pagination.page|tojson }}";
+
+        function setupCategoryAutocomplete() {
+            const searchInput = document.getElementById('category-search');
+            const resultsContainer = document.getElementById('category-search-results');
+            const selectedCategoryId = document.getElementById('selected-category-id');
+
+            searchInput.addEventListener('input', async function (e) {
+                const query = e.target.value.trim();
+
+                if (query.length < 2) {
+                    resultsContainer.classList.add('hidden');
+                    selectedCategoryId.value = '';
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`/api/categories/search?q=${encodeURIComponent(query)}`);
+                    const categories = await response.json();
+
+                    if (categories.length > 0) {
+                        resultsContainer.innerHTML = categories.map(cat => `
+                            <div class="p-3 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-b-0" 
+                                 data-category-id="${cat.id}">
+                                ${cat.name}
+                            </div>
+                        `).join('');
+                        resultsContainer.classList.remove('hidden');
+                    } else {
+                        resultsContainer.innerHTML = '<div class="p-3 text-gray-500">No categories found</div>';
+                        resultsContainer.classList.remove('hidden');
+                    }
+                } catch (error) {
+                    resultsContainer.innerHTML = '<div class="p-3 text-red-500">Error loading results</div>';
+                    resultsContainer.classList.remove('hidden');
+                }
+            });
+
+            resultsContainer.addEventListener('click', function (e) {
+                const categoryItem = e.target.closest('[data-category-id]');
+                if (categoryItem) {
+                    const categoryId = categoryItem.getAttribute('data-category-id');
+                    const categoryName = categoryItem.textContent.trim();
+
+                    searchInput.value = categoryName;
+                    selectedCategoryId.value = categoryId;
+                    resultsContainer.classList.add('hidden');
+                    fetchSubcategories(1);
+                }
+            });
+
+            document.addEventListener('click', function (e) {
+                if (!searchInput.contains(e.target) && !resultsContainer.contains(e.target)) {
+                    resultsContainer.classList.add('hidden');
+                }
+            });
+        }
+
+        async function fetchSubcategories(page = currentPage) {
+            loader.classList.remove('hidden');
+            const categoryId = document.getElementById('selected-category-id').value;
+            const limit = itemsPerPageSelect.value;
+            const url = `{{ subcategories_api_url }}?categoryId=${encodeURIComponent(categoryId)}&page=${page}&limit=${limit}`;
+
+            try {
+                const data = await fetchJsonData(url);
+
+                subcategoryTableBody.innerHTML = '';
+                if (data.subcategories.length === 0) {
+                    noSubcategoriesMessage.classList.remove('hidden');
+                } else {
+                    noSubcategoriesMessage.classList.add('hidden');
+                    data.subcategories.forEach(subcategory => {
+                        const row = `
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-3 py-3 md:px-6 md:py-4 text-sm border border-gray-200 text-center">
+                                <div class="flex-shrink-0 h-10 w-10 mx-auto">
+                                    <img class="h-10 w-10 rounded-full object-cover" src="${subcategory.img_url}" alt="${subcategory.name}">
+                                </div>
+                            </td>
+                            <td class="px-3 py-3 md:px-6 md:py-4 text-sm border border-gray-200 text-center">
+                                <div class="text-xs text-gray-500">${subcategory.category.name}</div>
+                            </td>
+                             <td class="px-3 py-3 md:px-6 md:py-4 text-sm border border-gray-200 text-center">
+                                <div class="text-sm font-medium text-gray-900">${subcategory.name}</div>
+                            </td>
+                            <td class="px-3 py-3 md:px-6 md:py-4 text-sm border border-gray-200 text-center">
+                                <div class="text-sm text-gray-500 max-w-xs mx-auto truncate relative group">
+                                    ${subcategory.description.substring(0, 100)}${subcategory.description.length > 100 ? '...' : ''}
+                                    ${subcategory.description.length > 100 ? `
+                                    <span class="absolute hidden group-hover:block w-64 bg-black text-white text-xs rounded p-2 z-10 left-1/2 -translate-x-1/2 top-full mt-2">
+                                        ${subcategory.description}
+                                    </span>
+                                    ` : ''}
+                                </div>
+                            </td>
+                            <td class="px-3 py-3 md:px-6 md:py-4 text-sm border border-gray-200 text-center font-medium">
+                                <a href="/sub-category/edit/${subcategory.id}" class="text-indigo-600 hover:text-indigo-900 mr-4">Edit</a>
+                                <button type="button" class="text-red-600 hover:text-red-900 delete-subcategory-btn"
+                                    data-subcategory-id="${subcategory.id}"
+                                    data-subcategory-name="${subcategory.name}">Delete</button>
+                            </td>
+                        </tr>`;
+                        subcategoryTableBody.innerHTML += row;
+                    });
+                }
+
+                updatePagination(data.pagination);
+                currentPage = data.pagination.page;
+                clearFilterButton.classList.toggle('hidden', !categoryId);
+                attachDeleteListeners();
+
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('Failed to load subcategories: ' + error.message, 'error');
+            } finally {
+                loader.classList.add('hidden');
+            }
+        }
+
+        function updatePagination(pagination) {
+            if (!paginationDiv) return;
+
+            paginationDiv.innerHTML = '';
+
+            if (pagination.has_prev) {
+                paginationDiv.innerHTML += `
+                <a href="#" data-page="${pagination.prev_num}"
+                    class="px-4 py-2 border text-sm rounded-lg hover:bg-gray-100 transition subCategories-pagination-link">
+                    Previous
+                </a>`;
+            } else {
+                paginationDiv.innerHTML += `
+                <span class="px-4 py-2 border rounded-lg text-base text-gray-400 cursor-not-allowed">Previous</span>`;
+            }
+
+            paginationDiv.innerHTML += `
+            <span class="px-4 py-2 text-sm" id="page-info">
+                Page ${pagination.page} of ${pagination.pages}
+            </span>`;
+
+            if (pagination.has_next) {
+                paginationDiv.innerHTML += `
+                <a href="#" data-page="${pagination.next_num}"
+                    class="px-4 py-2 border text-sm rounded-lg hover:bg-gray-100 transition subCategories-pagination-link">
+                    Next
+                </a>`;
+            } else {
+                paginationDiv.innerHTML += `
+                <span class="px-4 py-2 border rounded-lg text-gray-400 cursor-not-allowed">Next</span>`;
+            }
+
+            attachPaginationListeners('.subCategories-pagination-link', fetchSubcategories);
+        }
+
+        function attachDeleteListeners() {
+            document.querySelectorAll('.delete-subcategory-btn').forEach(button => {
+                button.addEventListener('click', () => {
+                    const subcategoryId = button.getAttribute('data-subcategory-id');
+                    const subcategoryName = button.getAttribute('data-subcategory-name');
+                    handleDelete(subcategoryId, subcategoryName);
+                });
+            });
+        }
+
+        async function handleDelete(subcategoryId, subcategoryName) {
+            modal.show({
+                title: 'Confirm Deletion',
+                message: `Are you sure you want to delete the subcategory "${subcategoryName}"? This will also delete all related sub-subcategories.`,
+                confirmText: 'Delete',
+                cancelText: 'Cancel',
+                onConfirm: async () => {
+                    loader.classList.remove('hidden');
+                    try {
+                        const response = await fetch(`/delete_sub_category/${subcategoryId}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                        });
+                        const data = await response.json();
+                        if (response.ok) {
+                            await fetchSubcategories(currentPage);
+                            showToast(data.message || 'Subcategory deleted successfully', 'success');
+                        } else {
+                            handleErrors(data.errors || 'Failed to delete subcategory', 'error');
+                        }
+                    } catch (error) {
+                        showToast('An error occurred while deleting the subcategory', 'error');
+                    } finally {
+                        loader.classList.add('hidden');
+                    }
+                }
+            });
+        }
+
+        function attachPaginationListeners(selector, callback) {
+            document.querySelectorAll(selector).forEach(link => {
+                link.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const page = this.getAttribute('data-page');
+                    callback(page);
+                });
+            });
+        }
+
+        setupCategoryAutocomplete();
+        itemsPerPageSelect.addEventListener('change', () => fetchSubcategories(1));
+
+        clearFilterButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            document.getElementById('category-search').value = '';
+            document.getElementById('selected-category-id').value = '';
+            fetchSubcategories(1);
+        });
+
+        attachPaginationListeners('.subCategories-pagination-link', fetchSubcategories);
+        attachDeleteListeners();
+    });
+</script>
+{% endblock %}

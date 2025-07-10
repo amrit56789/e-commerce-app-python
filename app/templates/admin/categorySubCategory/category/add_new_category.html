@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block title %}Add New Category{% endblock %}
+
+{% block admin_content %}
+<div class="bg-white rounded-lg mx-auto p-6">
+    <div class="text-center mb-8">
+        <h1 class="text-3xl font-bold text-center text-gray-800">Add New Category</h1>
+        <p class="mt-2 text-sm text-gray-600">Fill in the details below to create a new category</p>
+    </div>
+    <form id="categoryForm" method="POST" enctype="multipart/form-data">
+        <div class="mb-6">
+            <label for="name" class="block text-base font-medium text-black mb-1 tracking-wide">Title <span
+                    class="text-red-500">*</span></label>
+            <input type="text" name="name" id="name"
+                class="block w-full border rounded-md px-5 py-3 focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 ease-in-out">
+        </div>
+
+        <div class="mb-6">
+            {% set id = 'category-image' %}
+            {% set name = 'image' %}
+            {% set label = 'Category Image' %}
+            {% set required = true %}
+            {% set multiple = false %}
+            {% set accept = '.png,.jpeg,.jpg' %}
+            {% set help_text = 'PNG, JPG up to 2MB' %}
+
+            {% set label_classes = 'block text-base font-medium text-gray-700 mb-2' %}
+            {% include 'components/image_upload.html' %}
+        </div>
+
+        <div class="mb-6">
+            <label for="description" class="block text-base font-medium text-black mb-1 tracking-wide">Description <span
+                    class="text-red-500">*</span></label>
+            <input type="hidden" name="description" id="description">
+            <div id="editor-container" class="h-48"></div>
+        </div>
+
+        <div class="pt-4 flex justify-end">
+            <button type="submit"
+                class="w-48 flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out">
+                <span id="btn-text" class="btn-text">Add Category</span>
+                <!-- Loader spinner -->
+                <div id="loading-spinner" class="hidden">
+                    <svg class="animate-spin h-5 w-5 text-white block" xmlns="http://www.w3.org/2000/svg" fill="none"
+                        viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                        </circle>
+                        <path class="opacity-75" fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                        </path>
+                    </svg>
+                </div>
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+
+
+{% block js %}
+<script>
+
+    let quill;
+    document.addEventListener('DOMContentLoaded', function () {
+        try {
+            quill = new Quill('#editor-container', {
+                theme: 'snow',
+                modules: {
+                    toolbar: [
+                        ['bold', 'italic', 'underline', 'strike'],
+                        [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                        [{ 'indent': '-1' }, { 'indent': '+1' }],
+                        [{ 'color': [] }, { 'background': [] }],
+                        [{ 'align': [] }],
+                        ['clean'],
+                        ['link']
+                    ]
+                },
+                placeholder: 'Enter brand description...'
+            });
+
+            const descriptionInput = document.getElementById('description');
+            quill.on('text-change', function () {
+                descriptionInput.value = quill.root.innerHTML;
+            });
+        } catch (error) {
+            console.error('Failed to initialize text editor:', error);
+            showToast('Failed to initialize text editor', 'error');
+        }
+    });
+    document.getElementById('categoryForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        document.getElementById('loading-spinner').classList.remove('hidden');
+        document.getElementById('btn-text').classList.add('hidden');
+
+        const formData = new FormData(this);
+        const fields = {
+            name: document.getElementById('name'),
+            image: document.getElementById('category-image'),
+            description: document.getElementById('description')
+        };
+
+        const isImageValid = validateImage(fields.image);
+
+        const areOtherFieldsValid = Object.keys(fields).every(field => {
+            const fieldName = field.charAt(0).toUpperCase() + field.slice(1);
+
+            const isRequiredValid = validators.required(fields[field], fieldName);
+            if (!isRequiredValid) {
+                return isRequiredValid
+            }
+            let isMinLengthValid = true;
+
+            if (field === 'description') {
+                isMinLengthValid = validators.minLength(fields[field], 10, fieldName);
+            } else if (field !== 'image') {
+                isMinLengthValid = validators.minLength(fields[field], 3, fieldName);
+            }
+
+            return isMinLengthValid;
+        });
+
+        if (!isImageValid || !areOtherFieldsValid) {
+            document.getElementById('loading-spinner').classList.add('hidden');
+            document.getElementById('btn-text').classList.remove('hidden');
+            return;
+        }
+
+        try {
+            const response = await sendPostRequest('/api/categories/add', formData);
+            handleResponse(response);
+        } catch (error) {
+            console.error('Error:', error);
+            showToast('An error occurred while submitting the form', 'error');
+            document.getElementById('loading-spinner').classList.add('hidden');
+            document.getElementById('btn-text').classList.remove('hidden');
+        }
+    });
+
+    function handleResponse(response) {
+        document.getElementById('loading-spinner').classList.add('hidden');
+        document.getElementById('btn-text').classList.remove('hidden');
+
+        if (response.success) {
+            showToast('Category Added Successfully!', 'success');
+            document.getElementById('categoryForm').reset();
+            document.getElementById('category-image-preview').innerHTML = '';
+            document.getElementById('category-image-preview').classList.add('hidden');
+            setTimeout(() => {
+                window.location.href = "{{ url_for('admin_api.get_category_list_page') }}";
+            }, 500)
+        } else {
+            if (response.errors) {
+                Object.keys(response.errors).forEach(field => {
+                    const fieldError = response.errors[field];
+                    const fieldElement = document.getElementById(field);
+                    showToast(fieldError, 'error');
+                });
+            } else {
+                showToast(response.message || 'Failed to add category.', 'error');
+            }
+        }
+    }
+</script>
+{% endblock %}

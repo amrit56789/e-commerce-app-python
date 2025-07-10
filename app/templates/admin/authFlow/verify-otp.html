@@ -1,0 +1,275 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="h-screen flex flex-col items-center justify-center lg:flex-row overflow-hidden">
+  <div class="w-2/5 lg:block">
+    <img src="{{ url_for('static', filename='images/verify-otp.png') }}" alt="Login image"
+      class="object-cover w-full h-full hidden lg:block" />
+  </div>
+  <div class="w-full lg:w-1/2 flex items-center justify-center flex-col gap-10 px-6 bg-gray-100 py-10">
+    <div class="w-1/2 lg:block">
+      <img src="{{ url_for('static', filename='images/mainLogo.png') }}" alt="Signup image"
+        class="object-cover w-full h-full" />
+    </div>
+    <div class="w-full max-w-md bg-white p-8 rounded-xl shadow-lg">
+      <h1 class="text-2xl font-semibold text-center text-gray-800">Verify OTP</h1>
+      <p class="text-center text-black mt-2 mb-6">
+        Enter the 6-digit OTP sent to your email to continue.
+      </p>
+      <form id="otp-form" class="space-y-6">
+        <input type="hidden" id="email" />
+
+        <div class="space-y-2">
+          <label for="otp" class="block text-sm font-medium text-black">Enter OTP</label>
+          <div class="flex justify-between gap-2">
+            <input type="text" maxlength="1"
+              class="w-full min-h-14 text-center text-xl border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 otp-input" />
+            <input type="text" maxlength="1"
+              class="w-full min-h-14 text-center text-xl border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 otp-input" />
+            <input type="text" maxlength="1"
+              class="w-full min-h-14 text-center text-xl border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 otp-input" />
+            <input type="text" maxlength="1"
+              class="w-full min-h-14 text-center text-xl border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 otp-input" />
+            <input type="text" maxlength="1"
+              class="w-full min-h-14 text-center text-xl border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 otp-input" />
+            <input type="text" maxlength="1"
+              class="w-full min-h-14 text-center text-xl border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 otp-input" />
+          </div>
+          <input type="hidden" id="otp" />
+        </div>
+
+        <button type="submit"
+          class="w-full self-end px-6 py-3 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out">
+          <div class="h-5 flex items-center justify-center relative">
+            <span class="btn-text">Verify OTP</span>
+            <div id="loading-spinner" class="absolute inset-0 flex items-center justify-center hidden">
+              <span class="material-symbols-outlined animate-spin text-white text-xl">
+                progress_activity
+              </span>
+            </div>
+          </div>
+        </button>
+      </form>
+      <p id="resend-text" class="text-sm text-center text-gray-600 mt-4">
+        Didn't receive the OTP?
+        <button id="resend-otp-btn" class="text-blue-600 hover:underline focus:outline-none">Resend OTP</button>
+      </p>
+      <p id="resend-countdown" class="text-sm text-center text-gray-600 mt-2 hidden">
+        You can resend OTP in <span id="countdown-timer">30</span> seconds
+      </p>
+      <p class="text-sm mt-2 text-center text-gray-600">
+        Remember password?
+        <a href="{{ url_for('admin_api.login_page') }}" class="text-blue-600 hover:underline font-medium">Go to
+          Login</a>
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Modal -->
+<div id="toast-modal" class="fixed bottom-6 right-6 hidden z-50">
+  <div id="toast-content" class="flex items-center p-4 rounded-xl shadow-xl max-w-sm bg-white border-l-4 transition-all duration-300 transform translate-x-10 opacity-0"
+    role="alert">
+    <div id="toast-icon" class="mr-3 flex-shrink-0"></div>
+    <p id="toast-message" class="text-sm font-medium flex-grow"></p>
+    <button id="toast-close" class="ml-2 flex-shrink-0 focus:outline-none">
+      <span class="material-symbols-outlined text-gray-400 hover:text-gray-600 text-lg">close</span>
+    </button>
+  </div>
+</div>
+{% endblock %}
+{% block js %}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const urlParams = new URLSearchParams(window.location.search);
+    const email = urlParams.get("email");
+    const emailInput = document.getElementById("email");
+    if (email) emailInput.value = email;
+
+    const otpForm = document.getElementById("otp-form");
+    const otpHiddenField = document.getElementById("otp");
+    const otpInputs = document.querySelectorAll(".otp-input");
+    const resendOtpBtn = document.getElementById("resend-otp-btn");
+    const resendText = document.getElementById("resend-text");
+    const resendCountdown = document.getElementById("resend-countdown");
+    const countdownTimer = document.getElementById("countdown-timer");
+    const toastModal = document.getElementById("toast-modal");
+    const toastContent = document.getElementById("toast-content");
+    const toastMessage = document.getElementById("toast-message");
+    const toastIcon = document.getElementById("toast-icon");
+    const toastClose = document.getElementById("toast-close");
+    const loadingSpinner = document.getElementById("loading-spinner");
+    const btnText = document.querySelector(".btn-text");
+
+    // Toast Modal Functions
+    function showToast(message, type = "success") {
+      toastMessage.textContent = message;
+      toastContent.className = `flex items-center p-4 rounded-xl shadow-xl max-w-sm bg-white border-l-4 transition-all duration-300 transform ${
+        type === "success" ? "border-green-500" : "border-red-500"
+      }`;
+      toastIcon.innerHTML = `
+        <span class="material-symbols-outlined text-${
+          type === "success" ? "green" : "red"
+        }-600 text-xl">
+          ${type === "success" ? "check_circle" : "error"}
+        </span>
+      `;
+      toastModal.classList.remove("hidden");
+      toastContent.classList.remove("translate-x-10", "opacity-0");
+      toastContent.classList.add("translate-x-0", "opacity-100");
+
+      setTimeout(() => {
+        hideToast();
+      }, 5000);
+    }
+
+    function hideToast() {
+      toastContent.classList.add("translate-x-10", "opacity-0");
+      toastContent.classList.remove("translate-x-0", "opacity-100");
+      setTimeout(() => {
+        toastModal.classList.add("hidden");
+      }, 300);
+    }
+
+    toastClose.addEventListener("click", hideToast);
+
+    // Handle OTP input navigation
+    otpInputs.forEach((input, index) => {
+      input.addEventListener("input", (e) => {
+        if (e.target.value.length === 1 && index < otpInputs.length - 1) {
+          otpInputs[index + 1].focus();
+        }
+        updateHiddenOtp();
+      });
+
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Backspace" && input.value.length === 0 && index > 0) {
+          otpInputs[index - 1].focus();
+        }
+      });
+    });
+
+    function updateHiddenOtp() {
+      let otp = "";
+      otpInputs.forEach((input) => {
+        otp += input.value;
+      });
+      otpHiddenField.value = otp;
+    }
+
+    otpForm.addEventListener("submit", async function (event) {
+      event.preventDefault();
+
+      updateHiddenOtp();
+      const otpValue = otpHiddenField.value.trim();
+
+      if (!otpValue || otpValue.length !== 6) {
+        showToast("Please enter a complete 6-digit OTP.", "error");
+        return;
+      }
+
+      if (!/^\d{6}$/.test(otpValue)) {
+        showToast("OTP must contain only digits.", "error");
+        return;
+      }
+
+      const payload = {
+        email: emailInput.value.trim(),
+        code: otpValue,
+      };
+
+      try {
+        loadingSpinner.classList.remove("hidden");
+        btnText.classList.add("hidden");
+
+        const response = await fetch("/api/auth/verify-email-code", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        });
+
+        const data = await response.json();
+
+        if (data.status === "success") {
+          showToast(data.message || "OTP verified successfully.", "success");
+          setTimeout(() => {
+            const encodedEmail = encodeURIComponent(payload.email);
+            window.location.href = `/reset-password?email=${encodedEmail}`;
+          }, 1500);
+        } else {
+          showToast(data.message || "Verification failed.", "error");
+        }
+      } catch (error) {
+        console.error("Error sending request:", error);
+        showToast("An error occurred. Please try again.", "error");
+      } finally {
+        loadingSpinner.classList.add("hidden");
+        btnText.classList.remove("hidden");
+      }
+    });
+
+    let countdownInterval = null;
+    function startCountdown() {
+      let timeLeft = 30;
+      resendOtpBtn.disabled = true;
+      resendText.classList.add("hidden");
+      resendCountdown.classList.remove("hidden");
+      countdownTimer.textContent = timeLeft;
+
+      countdownInterval = setInterval(() => {
+        timeLeft -= 1;
+        countdownTimer.textContent = timeLeft;
+        if (timeLeft <= 0) {
+          clearInterval(countdownInterval);
+          resendOtpBtn.disabled = false;
+          resendCountdown.classList.add("hidden");
+          resendText.classList.remove("hidden");
+          countdownTimer.textContent = 30;
+        }
+      }, 1000);
+    }
+
+    resendOtpBtn.addEventListener("click", async function () {
+      const emailValue = emailInput.value.trim();
+      if (!emailValue) {
+        showToast("Email is required to resend OTP.", "error");
+        return;
+      }
+
+      const payload = {
+        email: emailValue,
+      };
+
+      try {
+        resendOtpBtn.disabled = true;
+        resendOtpBtn.textContent = "Sending...";
+
+        const response = await fetch("/api/auth/resend-otp", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        });
+
+        const data = await response.json();
+
+        if (data.status === "success") {
+          showToast(data.message || "OTP resent successfully.", "success");
+          startCountdown();
+        } else {
+          showToast(data.message || "Failed to resend OTP.", "error");
+          resendOtpBtn.disabled = false;
+        }
+      } catch (error) {
+        console.error("Error resending OTP:", error);
+        showToast("An error occurred. Please try again.", "error");
+        resendOtpBtn.disabled = false;
+      } finally {
+        resendOtpBtn.textContent = "Resend OTP";
+      }
+    });
+  });
+</script>
+{% endblock %}

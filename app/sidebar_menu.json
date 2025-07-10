@@ -1,0 +1,160 @@
+{
+    "mainMenu": [
+      {
+        "title": "MAIN HOME",
+        "items": [
+          {
+            "label": "Dashboard",
+            "icon": "grid_view",
+            "endpoint": "admin_api.dashboard"
+          }
+        ]
+      },
+      {
+        "title": "All Page",
+        "items": [
+          {
+            "label": "All User",
+            "icon": "person",
+            "endpointGroup": ["admin_api.all_users", "admin_api.add_new_user"],
+            "submenu": [
+              {
+                "label": "All User",
+                "icon": "patient_list",
+                "endpoint": "admin_api.all_users"
+              },
+                {
+                "label": "Add New User",
+                "icon": "person_add",
+                "endpoint": "admin_api.add_new_user"
+              }
+            ]
+          },
+          {
+            "label": "Seller",
+            "icon": "group",
+            "endpointGroup": ["admin_api.add_new_seller", "admin_api.get_seller_list"],
+            "submenu": [
+              {
+                "label": "Add Seller",
+                "icon": "person_add",
+                "endpoint": "admin_api.add_new_seller"
+              },
+              {
+                "label": "Seller List",
+                "icon": "groups",
+                "endpoint": "admin_api.get_seller_list"
+              }
+            ]
+          },
+          {
+            "label": "Category",
+            "icon": "category",
+            "endpointGroup": [
+              "admin_api.get_category_list_page",
+              "admin_api.add_new_category_page",
+              "admin_api.add_subcategory_page",
+              "admin_api.get_subcategory_list_page",
+              "admin_api.product_types_list_page",
+              "admin_api.add_sub_sub_category_page",
+              "admin_api.sub_sub_category_list_page"
+            ],
+            "submenu": [
+              {
+                "label": "Add New Category",
+                "icon": "add_circle",
+                "endpoint": "admin_api.add_new_category_page"
+              },
+              {
+                "label": "Category List",
+                "icon": "format_list_bulleted",
+                "endpoint": "admin_api.get_category_list_page"
+              },
+              {
+                "label": "Add Sub-Category",
+                "icon": "library_add",
+                "endpoint": "admin_api.add_subcategory_page"
+              },
+              {
+                "label": "Sub-Category List",
+                "icon": "view_headline",
+                "endpoint": "admin_api.get_subcategory_list_page"
+              },
+              {
+                "label": "Sub-Sub Category",
+                "icon": "add",
+                "endpoint": "admin_api.add_sub_sub_category_page"
+              },
+              {
+                "label": "Sub-Sub Category List",
+                "icon": "lists",
+                "endpoint": "admin_api.sub_sub_category_list_page"
+              }
+            ]
+          },
+          {
+            "label": "Product Brand",
+            "icon": "brand_family",
+            "endpointGroup": ["admin_api.add_new_brand_page", "admin_api.get_brand_list_page"],
+            "submenu": [
+              {
+                "label": "Add New Brand",
+                "icon": "add_circle",
+                "endpoint": "admin_api.add_new_brand_page"
+              },
+              {
+                "label": "Brand Lists",
+                "icon": "format_list_bulleted",
+                "endpoint": "admin_api.get_brand_list_page"
+              }
+            ]
+          },
+          {
+            "label": "Product",
+            "icon": "shopping_bag",
+            "endpointGroup": ["admin_api.get_products_page", "admin_api.get_product_lists"],
+            "submenu": [
+              {
+                "label": "Add Product",
+                "icon": "add_circle",
+                "endpoint": "admin_api.get_products_page"
+              },
+              {
+                "label": "Product List",
+                "icon": "format_list_bulleted",
+                "endpoint": "admin_api.get_product_lists"
+              }
+            ]
+          },
+          {
+            "label": "Promo Code",
+            "icon": "redeem",
+            "endpointGroup": ["admin_api.add_promo_code", "admin_api.promo_code_list"],
+            "submenu": [
+              {
+                "label": "Add Promo Code",
+                "icon": "add_circle",
+                "endpoint": "admin_api.add_promo_code"
+              },
+              {
+                "label": "Promo Code List",
+                "icon": "format_list_bulleted",
+                "endpoint": "admin_api.promo_code_list"
+              }
+            ]
+          },
+          {
+            "label": "Orders",
+            "icon": "list_alt",
+            "endpoint": "admin_api.product_order_list_page"
+          },
+          {
+            "label": "Settings",
+            "icon": "settings",
+            "endpoint": "admin_api.settings"
+          }
+        ]
+      }
+    ]
+  }
+  

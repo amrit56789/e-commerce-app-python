@@ -1,0 +1,267 @@
+{% extends "base.html" %}
+
+{% block title %}Promo Code List{% endblock %}
+
+{% block admin_content %}
+<div class="bg-white rounded-lg shadow-lg p-8">
+    <div class="flex items-center justify-between mb-10">
+        <h1 class="text-3xl font-semibold text-gray-800 mb-6 text-center">Promo Code List</h1>
+        <a href="{{ url_for('admin_api.add_promo_code') }}"
+            class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-gray-400 disabled:text-gray-700 text-sm">
+            Add New Promo Code
+        </a>
+    </div>
+
+    <div id="loader" class="hidden fixed inset-0 bg-gray-100 bg-opacity-50 flex items-center justify-center z-50">
+        <div class="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+    </div>
+
+    <form id="search-form" class="flex flex-col sm:flex-row items-end justify-between w-full mb-10 gap-4">
+        <div class="flex flex-col sm:flex-row gap-4 w-full">
+            <div class="flex flex-col w-full sm:w-1/3">
+                <label class="block text-sm font-medium text-black">Search Promo Code</label>
+                <input type="text" name="promoSearch" placeholder="Search by code or description"
+                    class="mt-1 block w-full px-4 py-3 border border-gray-300 outline-none rounded-lg shadow-sm sm:text-sm">
+            </div>
+            <div class="flex flex-col w-full sm:w-1/3">
+                <label class="block text-sm font-medium text-black">Status</label>
+                <div class="relative">
+                    <select name="status"
+                        class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm sm:text-sm appearance-none">
+                        <option value="">All</option>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                    <span class="material-symbols-outlined pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                        expand_more
+                    </span>
+                </div>
+            </div>
+            <div class="flex flex-col w-full sm:w-1/3">
+                <label class="block text-sm font-medium text-black">Discount Type</label>
+                <div class="relative">
+                    <select name="discount_type"
+                        class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm sm:text-sm appearance-none">
+                        <option value="">All</option>
+                        <option value="percentage">Percentage</option>
+                        <option value="fixed">Fixed</option>
+                    </select>
+                    <span class="material-symbols-outlined pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                        expand_more
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="flex gap-4 w-full sm:w-auto">
+            <button type="button" id="clear-search"
+                class="w-full sm:w-36 text-center py-3 px-4 border border-red-500 rounded-lg text-red-500 text-sm font-medium hover:bg-red-50">
+                Clear Filters
+            </button>
+        </div>
+    </form>
+    {% set promo_headers = ['S.No', 'Code', 'Description', 'Discount', 'Valid From', 'Valid To', 'Status',
+    'Actions'] %}
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200 text-gray-800" id="promo-table">
+            <thead class="bg-gray-50">
+                <tr>
+                    {% for header in promo_headers %}
+                    <th class="border border-gray-200 px-3 py-3 md:px-6 md:py-4 text-xs font-medium text-gray-500 uppercase tracking-wider text-center">
+                        {{ header }}
+                    </th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody id="promo-table-body"></tbody>
+        </table>
+    </div>
+
+    <div class="flex flex-col sm:flex-row items-center justify-between mt-8 gap-4">
+        <div class="flex items-center gap-2">
+            <span class="text-sm text-gray-600">Items per page:</span>
+            <div class="relative">
+                <select id="items-per-page" class="border w-24 border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none">
+                    {% for amount in [10, 20, 50, 100] %}
+                    <option value="{{ amount }}" {% if limit==amount %}selected{% endif %}>
+                        {{ amount }}
+                    </option>
+                    {% endfor %}
+                </select>
+                <span class="material-symbols-outlined pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                    expand_more
+                </span>
+            </div>
+        </div>
+
+        <div id="pagination-controls" class="flex gap-2"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const loader = document.getElementById('loader');
+    const searchForm = document.getElementById('search-form');
+    const clearSearch = document.getElementById('clear-search');
+    const itemsPerPage = document.getElementById('items-per-page');
+    const promoTableBody = document.getElementById('promo-table-body');
+    const paginationControls = document.getElementById('pagination-controls');
+    
+    let currentState = {
+        page: 1,
+        limit: parseInt(itemsPerPage.value),
+        search: '',
+        status: '',
+        discount_type: ''
+    };
+
+    let debounceTimer;
+    function debounce(callback, delay) {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(callback, delay);
+    }
+
+    function toggleLoader(show) {
+        loader.classList.toggle('hidden', !show);
+    }
+
+    async function loadPromoCodes() {
+        toggleLoader(true);
+        
+        try {
+            const queryParams = new URLSearchParams({
+                page: currentState.page,
+                limit: currentState.limit,
+                promoSearch: currentState.search,
+                status: currentState.status,
+                discount_type: currentState.discount_type
+            });
+
+            const response = await fetch(`/api/admin/promo-codes?${queryParams}`);
+            const data = await response.json();
+            
+            updatePromoTable(data);
+            updatePagination(data);
+        } catch (error) {
+            console.error('Error:', error);
+            promoTableBody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-gray-500">Error loading promo codes</td></tr>';
+        } finally {
+            toggleLoader(false);
+        }
+    }
+
+    function updatePromoTable(data) {
+        promoTableBody.innerHTML = '';
+        
+        if (data.promos.length === 0) {
+            promoTableBody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-gray-500">No promo codes found.</td></tr>';
+            return;
+        }
+
+        data.promos.forEach((promo, index) => {
+            const row = document.createElement('tr');
+            row.className = 'text-center hover:bg-gray-50';
+            row.innerHTML = `
+                <td class="px-3 py-3 md:px-6 md:py-4 text-sm border border-gray-200">${(currentState.page - 1) * currentState.limit + index + 1}</td>
+                <td class="px-3 py-3 md:px-6 md:py-4 text-sm border border-gray-200 font-mono">${promo.code}</td>
+                <td class="px-3 py-3 md:px-6 md:py-4 text-sm border border-gray-200">${promo.description || ''}</td>
+                <td class="px-3 py-3 md:px-6 md:py-4 text-sm border border-gray-200">
+                    ${promo.discount_type === 'percentage' ? 
+                        `${promo.discount_value}%${promo.max_discount_amount ? ` (max ${promo.max_discount_amount})` : ''}` : 
+                        `${promo.discount_value} fixed`}
+                </td>
+                <td class="px-3 py-3 md:px-6 md:py-4 text-sm border border-gray-200">${promo.start_date || 'N/A'}</td>
+                <td class="px-3 py-3 md:px-6 md:py-4 text-sm border border-gray-200">${promo.expiry_date || 'N/A'}</td>
+                <td class="px-3 py-3 md:px-6 md:py-4 text-sm border border-gray-200">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${promo.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                        ${promo.is_active ? 'Active' : 'Inactive'}
+                    </span>
+                </td>
+                <td class="px-3 py-3 md:px-6 md:py-4 text-sm border border-gray-200">
+                    <div class="flex space-x-6 justify-center">
+                        <a href="/promo-code/edit/${promo.id}" class="text-blue-600 hover:text-blue-800">
+                            <span class="material-symbols-outlined">edit_square</span>
+                        </a>
+                    </div>
+                </td>
+            `;
+            promoTableBody.appendChild(row);
+        });
+    }
+
+    function updatePagination(data) {
+        const start = (currentState.page - 1) * currentState.limit + 1;
+        const end = Math.min(currentState.page * currentState.limit, data.total);
+
+        paginationControls.innerHTML = '';
+
+        const prevButton = document.createElement('button');
+        prevButton.textContent = 'Previous';
+        prevButton.className = `px-4 py-2 text-sm border rounded-lg ${currentState.page === 1 ? 'text-gray-400 cursor-not-allowed' : 'text-gray-700 hover:bg-gray-50'}`;
+        prevButton.disabled = currentState.page === 1;
+        prevButton.addEventListener('click', () => {
+            if (currentState.page > 1) {
+                currentState.page--;
+                loadPromoCodes();
+            }
+        });
+        paginationControls.appendChild(prevButton);
+
+        const pageInfo = document.createElement('span');
+        pageInfo.className = 'px-4 py-2 text-sm text-gray-700';
+        pageInfo.textContent = `Page ${currentState.page} of ${data.pages}`;
+        paginationControls.appendChild(pageInfo);
+
+        const nextButton = document.createElement('button');
+        nextButton.textContent = 'Next';
+        nextButton.className = `px-4 py-2 text-sm border rounded-lg ${currentState.page === data.pages ? 'text-gray-400 cursor-not-allowed' : 'text-gray-700 hover:bg-gray-50'}`;
+        nextButton.disabled = currentState.page === data.pages;
+        nextButton.addEventListener('click', () => {
+            if (currentState.page < data.pages) {
+                currentState.page++;
+                loadPromoCodes();
+            }
+        });
+        paginationControls.appendChild(nextButton);
+    }
+
+    // Event listeners for form inputs with debouncing
+    searchForm.elements.promoSearch.addEventListener('input', function() {
+        currentState.page = 1;
+        currentState.search = this.value;
+        debounce(() => loadPromoCodes(), 300);
+    });
+
+    searchForm.elements.status.addEventListener('change', function() {
+        currentState.page = 1;
+        currentState.status = this.value;
+        loadPromoCodes();
+    });
+
+    searchForm.elements.discount_type.addEventListener('change', function() {
+        currentState.page = 1;
+        currentState.discount_type = this.value;
+        loadPromoCodes();
+    });
+
+    clearSearch.addEventListener('click', function() {
+        searchForm.reset();
+        currentState.page = 1;
+        currentState.search = '';
+        currentState.status = '';
+        currentState.discount_type = '';
+        loadPromoCodes();
+    });
+
+    itemsPerPage.addEventListener('change', function() {
+        currentState.limit = parseInt(this.value);
+        currentState.page = 1;
+        loadPromoCodes();
+    });
+
+    // Initial load
+    loadPromoCodes();
+});
+</script>
+{% endblock %}

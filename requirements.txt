@@ -1,0 +1,15 @@
+flask==2.2.5
+flask-mail==0.9.1
+cloudinary==1.27.0
+bcrypt==4.0.1
+pymongo==4.1.0
+python-dotenv==0.20.0
+flask-mongoengine==1.0.0
+flask-bcrypt==1.0.1
+Flask-Inputs==0.3.0
+flask-jwt-extended==4.4.4
+flask-cors==3.0.10
+pytz==2022.1
+razorpay
+setuptools>=40.0.0
+firebase-admin==6.2.0

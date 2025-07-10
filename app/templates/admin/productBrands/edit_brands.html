@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Brand{% endblock %}
+
+{% block css %}
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+{% endblock %}
+
+{% block admin_content %}
+<div class="bg-white rounded-lg shadow-lg p-8">
+    <div class="text-center mb-8">
+        <h1 class="text-3xl font-bold text-gray-800">Edit Brand</h1>
+        <p class="mt-2 text-sm text-gray-600">Fill in the details below to edit a brand</p>
+    </div>
+
+    <div class="mb-4">
+        <a href="{{ url_for('admin_api.get_brand_list_page') }}"
+            class="inline-flex items-center space-x-3 text-indigo-600 hover:text-indigo-800">
+            <span class="material-symbols-outlined">
+                keyboard_backspace
+            </span>
+            <span> Back to Brands
+            </span>
+        </a>
+    </div>
+
+    <form id="editBrandForm" enctype="multipart/form-data">
+        <div class="mb-4">
+            <label for="name" class="block text-base font-medium text-black">Brand Name <span
+                    class="text-red-500">*</span></label>
+            <input type="text" id="name" name="name" value="{{ brand.name }}"
+                class="mt-2 block w-full border rounded-md px-5 py-3 focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 ease-in-out">
+        </div>
+
+        <div class="mb-4">
+            <label for="description" class="block text-base font-medium text-black">Description <span
+                    class="text-red-500">*</span></label>
+            <input type="hidden" id="description" name="description">
+            <div id="editor-container" class="h-48">{{ brand.description | safe }}</div>
+        </div>
+
+        <div class="mb-4">
+            <div class="bg-white">
+                {% set id = 'brand-logo' %}
+                {% set name = 'images' %}
+                {% set label = 'Brand Logo' %}
+                {% set required = true %}
+                {% set multiple = false %}
+                {% set accept = '.png,.jpeg,.jpg,.webp,.avif' %}
+                {% set help_text = 'PNG, JPG, JPEG up to 2MB' %}
+                {% set label_classes = 'block text-base font-medium text-black' %}
+                {% set existing_image = brand.logo_path %}
+
+                {% include 'components/image_upload.html' %}
+            </div>
+        </div>
+        <div class="pt-4 flex justify-end">
+            <button type="submit"
+                class="w-48 flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out disabled:bg-gray-400 disabled:cursor-not-allowed disabled:opacity-50"
+                disabled>
+                <span id="btn-text" class="btn-text"> Save </span>
+                <div id="loading-spinner" class="hidden">
+                    <svg class="animate-spin h-5 w-5 text-white block" xmlns="http://www.w3.org/2000/svg" fill="none"
+                        viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                        </circle>
+                        <path class="opacity-75" fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                        </path>
+                    </svg>
+                </div>
+            </button>
+        </div>
+    </form>
+</div>
+
+{% endblock %}
+
+{% block js %}
+<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+
+<script>
+    let initialValues = {
+        name: "{{ brand.name }}",
+        description: "{{ brand.description }}",
+        logo: "{{ brand.logo_path }}"
+    };
+
+    const saveButton = document.querySelector("button[type='submit']");
+    saveButton.disabled = true;
+
+    const nameField = document.getElementById('name');
+    const descriptionField = document.getElementById('description');
+    const logoField = document.getElementById('brand-logo');
+    const loader = document.getElementById('loading-spinner');
+    const btnText = document.getElementById('btn-text');
+    const responseMessage = document.createElement('p');
+
+    let quill = new Quill('#editor-container', {
+        theme: 'snow',
+        modules: {
+            toolbar: [
+                ['bold', 'italic', 'underline', 'strike'],
+                [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+                [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                [{ 'indent': '-1' }, { 'indent': '+1' }],
+                [{ 'color': [] }, { 'background': [] }],
+                [{ 'align': [] }],
+                ['clean'],
+                ['link']
+            ]
+        }
+    });
+
+    quill.on('text-change', function() {
+        descriptionField.value = quill.root.innerHTML;
+        checkIfChanged();
+    });
+
+    const checkIfChanged = () => {
+        const isChanged = (
+            nameField.value !== initialValues.name ||
+            descriptionField.value !== initialValues.description ||
+            (logoField.files.length > 0 && logoField.files[0].name !== initialValues.logo)
+        );
+        saveButton.disabled = !isChanged;
+    };
+
+    document.getElementById("editBrandForm").addEventListener("submit", async function (event) {
+        event.preventDefault();
+
+        const isRequiredValid =
+            validators.required(nameField, 'Brand Name') &&
+            validators.required(descriptionField, 'Description');
+
+        if (!isRequiredValid) return;
+
+        const isMinLengthValid =
+            validators.minLength(nameField, 3, 'Brand Name') &&
+            validators.minLength(descriptionField, 10, 'Description');
+
+        if (!isMinLengthValid) return;
+
+        if (logoField.files.length > 0) {
+            const isImageValid = validateImage(logoField);
+            if (!isImageValid) return;
+        }
+
+        loader.classList.remove('hidden');
+        btnText.classList.add('hidden');
+
+        const formData = new FormData();
+        formData.append("name", nameField.value);
+        formData.append("description", descriptionField.value);
+        const logo = logoField.files[0];
+        if (logo) formData.append("logo", logo);
+
+        try {
+            const result = await sendPostRequest(`/api/update-brand?brandId={{ brand.id | string }}`, formData);
+
+            if (result.success) {
+                setTimeout(() => {
+                    window.location.href = "{{ url_for('admin_api.get_brand_list_page') }}";
+                }, 100);
+            } else {
+                responseMessage.textContent = result.errors || result.message || 'An error occurred';
+                responseMessage.classList.add('text-red-500');
+            }
+        } catch (error) {
+            responseMessage.textContent = error.message || 'An error occurred';
+            responseMessage.classList.add('text-red-500');
+        } finally {
+            loader.classList.add('hidden');
+            btnText.classList.remove('hidden');
+        }
+    });
+
+    [nameField, logoField].forEach(field => {
+        field.addEventListener('input', checkIfChanged);
+    });
+</script>
+{% endblock %}

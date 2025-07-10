@@ -1,0 +1,1351 @@
+{% extends "base.html" %} {% block title %}Edit Product{% endblock %} {% block
+admin_content %}
+<div class="mx-auto p-6 bg-white rounded-lg shadow-lg">
+  <h1 class="text-3xl font-bold mb-8 text-center text-gray-800">
+    Edit Product
+  </h1>
+  <form method="POST" enctype="multipart/form-data" class="space-y-8">
+    <!-- Section 1: Basic Information -->
+    <div class="bg-white p-6 mb-6">
+      <h3 class="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b">
+        Basic Information
+      </h3>
+      <div class="grid grid-cols-1 gap-6">
+        <!-- Title -->
+        <div>
+          <label for="title" class="block text-base font-medium text-black">
+            Title <span class="text-red-500">*</span>
+          </label>
+          <input type="text" name="title" id="title" placeholder="Enter product title" value="{{ product.title }}"
+            class="mt-2 block w-full border rounded-md px-5 py-3 focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 ease-in-out" />
+        </div>
+
+        <!-- Description  -->
+        <div>
+          <label for="description" class="block text-base font-medium text-black">
+            Description <span class="text-red-500">*</span>
+          </label>
+          <input type="text" name="description" id="description" placeholder="Enter product description"
+            value="{{ product.description }}"
+            class="mt-2 block w-full border rounded-md px-5 py-3 focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 ease-in-out" />
+        </div>
+
+        <!-- Product Details -->
+        <div>
+          <label for="product-details" class="block text-base font-medium text-black mb-2">
+            Product Details <span class="text-red-500">*</span>
+          </label>
+          <div id="quill-editor" class="h-48 border border-gray-300 rounded-md">
+            {{ product.details|safe }}
+          </div>
+          <input type="hidden" name="product-details" id="product-details" value="{{ product.details }}" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 2: Pricing & Inventory -->
+    <div class="bg-white p-6 mb-6">
+      <h3 class="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b">
+        Pricing & Inventory
+      </h3>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div>
+          <label for="price" class="block text-base font-medium text-black">Price <span
+              class="text-red-500">*</span></label>
+          <div class="relative rounded-md shadow-sm">
+            <input type="number" name="price" id="price" step="0.01" placeholder="0.00" value="{{ product.price }}"
+              class="mt-2 block w-full border rounded-md px-5 py-3 focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 ease-in-out" />
+          </div>
+        </div>
+
+        <div>
+          <label for="discount_price" class="block text-base font-medium text-black">Discount (%)</label>
+          <input type="number" name="discount_price" id="discount_price" step="0.01" min="0" max="100"
+            value="{{ product.discount_percent }}"
+            class="mt-2 block w-full border rounded-md px-5 py-3 focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 ease-in-out" />
+        </div>
+
+        <div>
+          <label for="stock" class="block text-base font-medium text-black">Stock <span
+              class="text-red-500">*</span></label>
+          <input type="number" name="stock" id="stock" min="0" placeholder="Available quantity"
+            value="{{ product.stock_quantity }}"
+            class="mt-2 block w-full border rounded-md px-5 py-3 focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 ease-in-out" />
+        </div>
+
+        <div>
+          <label for="sku" class="block text-base font-medium text-black">SKU <span
+              class="text-red-500">*</span></label>
+          <input type="text" name="sku" id="sku" placeholder="Product identifier" value="{{ product.sku }}" readonly
+            class="mt-2 block w-full border rounded-md px-5 py-3 focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 ease-in-out" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 3: Product Attributes -->
+    <div class="bg-white p-6 mb-6">
+      <h3 class="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b">
+        Product Attributes
+      </h3>
+      <div class="grid grid-cols-1 gap-6">
+        <div>
+          <label for="brand" class="block text-base font-medium text-black">
+            Brand <span class="text-red-500">*</span>
+          </label>
+          <div class="relative mt-1">
+            <select name="brand" id="brand" disabled
+              class="mt-2 block w-full border rounded-md px-5 py-3 bg-gray-100 text-gray-500 cursor-not-allowed appearance-none">
+              <option value="">Select a brand</option>
+            </select>
+            <span
+              class="material-symbols-outlined pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+              expand_more
+            </span>
+          </div>
+
+          <!-- input for custom brand name -->
+          <input type="text" id="other-brand" name="other_brand" placeholder="Enter other brand"
+            class="mt-2 block w-full border rounded-md px-5 py-3 focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 ease-in-out hidden" />
+        </div>
+      </div>
+    </div>
+
+    <div class="space-y-6 px-6">
+      <h3 class="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b">
+        Product Attributes
+      </h3>
+      <div class="flex justify-between items-center mb-6">
+        <div class="">
+          <label for="brand" class="block text-base font-medium text-black">
+            Size Type <span class="text-red-500">*</span>
+          </label>
+          <div class="flex space-x-6 mt-2">
+            <div class="flex items-center">
+              <input type="radio" id="size_type_standard" name="size_type" value="standard"
+                class="h-5 w-5 text-blue-600 focus:ring-blue-500 accent-blue-600" checked />
+              <label for="size_type_standard" class="ml-2 block font-medium text-sm text-gray-700">Standard Sizes (S, M,
+                L, XL, etc.)</label>
+            </div>
+            <div class="flex items-center">
+              <input type="radio" id="size_type_numeric" name="size_type" value="numeric"
+                class="h-5 w-6 text-blue-600 focus:ring-blue-500 ccent-blue-600" />
+              <label for="size_type_numeric" class="ml-2 block text-sm font-medium text-gray-700">Numeric Sizes (28, 30,
+                32, etc.)</label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="size-container"></div>
+    </div>
+    <div class="p-6">
+      <button type="button" id="add-size-btn"
+        class="w-fit flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out">
+        + Add Another Size
+      </button>
+    </div>
+
+    <div id="variant-images-container" class="px-6"></div>
+
+    <div class="mt-6 flex justify-end">
+      <button disabled type="button" id="save-btn"
+        class="inline-flex items-center px-6 py-3 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-blue-600 disabled:bg-gray-300 disabled:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-150 ease-in-out">
+        Save Changes
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %} {% block js %}
+<script>
+  document.addEventListener("DOMContentLoaded", async () => {
+    const CONFIG = {
+      standardColors: [
+        { name: "White", hex: "#FFFFFF" },
+        { name: "Black", hex: "#000000" },
+        { name: "Red", hex: "#FF0000" },
+        { name: "Green", hex: "#008000" },
+        { name: "Blue", hex: "#0000FF" },
+        { name: "Yellow", hex: "#FFFF00" },
+        { name: "Orange", hex: "#FFA500" },
+        { name: "Purple", hex: "#800080" },
+        { name: "Pink", hex: "#FFC0CB" },
+        { name: "Brown", hex: "#A52A2A" },
+        { name: "Gray", hex: "#808080" },
+        { name: "Cyan", hex: "#00FFFF" },
+        { name: "Magenta", hex: "#FF00FF" },
+        { name: "Lime", hex: "#00FF00" },
+        { name: "Navy", hex: "#000080" },
+        { name: "Teal", hex: "#008080" },
+        { name: "Olive", hex: "#808000" },
+        { name: "Maroon", hex: "#800000" },
+        { name: "Silver", hex: "#C0C0C0" },
+        { name: "Gold", hex: "#FFD700" },
+      ],
+      standardSizes: ['S', 'M', 'L', 'XL', 'XXL', 'XXXL'],
+      numericSizes: [32, 34, 36, 38, 40],
+      maxImagesPerVariant: 8,
+    };
+
+    // DOM Elements
+    const DOM = {
+      brandSelect: document.getElementById("brand"),
+      otherBrandInput: document.getElementById("other-brand"),
+      variantImagesContainer: document.getElementById("variant-images-container"),
+      form: document.getElementById("product-variants-form"),
+      sizeContainer: document.getElementById("size-container"),
+      addSizeBtn: document.getElementById("add-size-btn"),
+      sizeTypeRadios: document.querySelectorAll('input[name="size_type"]'),
+      saveBtn: document.querySelector("button#save-btn"),
+      quillEditor: document.querySelector("#quill-editor"),
+      productDetails: document.getElementById("product-details"),
+    };
+
+    // State
+    let productData = null;
+    let sizeCounter = 0;
+    let initialFormState = null;
+
+    // Initialize Quill Editor
+    const quill = new Quill(DOM.quillEditor, {
+      theme: "snow",
+      modules: {
+        toolbar: [
+          ['bold', 'italic', 'underline', 'strike'],
+          [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+          [{ 'list': 'ordered' }, { 'list': 'bullet' }, { 'list': 'check' }],
+          [{ 'indent': '-1' }, { 'indent': '+1' }],
+          [{ 'direction': 'rtl' }],
+          [{ 'script': 'sub' }, { 'script': 'super' }],
+          [{ 'color': [] }, { 'background': [] }],
+          [{ 'font': [] }],
+          [{ 'align': [] }],
+          ['clean'],
+          ['link', 'image']
+        ]
+      },
+    });
+
+    const sendGetRequest = async (url) => {
+      try {
+        const response = await fetch(url, { credentials: "include" });
+        if (!response.ok) throw new Error("Network response was not ok");
+        return await response.json();
+      } catch (error) {
+        return { success: false, error: error.message };
+      }
+    };
+
+    // Brand Management
+    const initializeBrandSelect = async () => {
+      const { success, data, error } = await sendGetRequest("/api/brand/lists");
+      if (!success) {
+        showToast("Failed to fetch brands", "error");
+        console.error("Failed to fetch brands:", error);
+        return;
+      }
+
+      const brands = data;
+      const currentBrandId = "{{ product.brand.id }}";
+
+      brands.forEach((brand) => {
+        const option = document.createElement("option");
+        option.value = brand.id;
+        option.textContent = brand.name;
+        if (brand.id === currentBrandId) option.selected = true;
+        DOM.brandSelect.appendChild(option);
+      });
+
+      const otherOption = document.createElement("option");
+      otherOption.value = "other";
+      otherOption.textContent = "Other";
+      DOM.brandSelect.appendChild(otherOption);
+
+      DOM.brandSelect.addEventListener("change", (e) => {
+        DOM.otherBrandInput.classList.toggle("hidden", e.target.value !== "other");
+        if (e.target.value !== "other") DOM.otherBrandInput.value = "";
+        updateSaveButtonState();
+      });
+    };
+
+    // Product Data Initialization
+    const initializeProductData = () => {
+      try {
+        productData = {{ product | tojson | safe }}
+        quill.root.innerHTML = productData.details;
+        initializeForm();
+        generateImageUploadFields();
+        initialFormState = getFormState();
+      } catch (error) {
+        showToast("Failed to load product data. Please refresh the page.", "error");
+        console.error("Error parsing product data:", error);
+      }
+    };
+
+    // Form Management
+    const getCurrentSizeType = () =>
+      document.querySelector('input[name="size_type"]:checked').value;
+
+    const getColorsForSize = (size, sizeType) =>
+      productData.colors.filter((colorData) =>
+        colorData.sizes.some((s) => s.size === size && s.size_type === sizeType)
+      );
+
+    const getSizeDataForColorAndSize = (colorValue, size) =>
+      productData.colors
+        .find((c) => c.value === colorValue)
+        ?.sizes.find((s) => s.size === size) || null;
+
+    const initializeForm = () => {
+      const currentSizeType = getCurrentSizeType();
+      const processedSizes = new Set();
+      DOM.sizeContainer.innerHTML = "";
+
+      const hasSizesOfType = productData.colors.some((colorData) =>
+        colorData.sizes.some((s) => s.size_type === currentSizeType)
+      );
+
+      if (!hasSizesOfType) {
+        addSizeBlock("", currentSizeType);
+        return;
+      }
+
+      productData.colors.forEach((colorData) => {
+        colorData.sizes.forEach((sizeData) => {
+          if (sizeData.size_type === currentSizeType) {
+            const sizeKey = `${sizeData.size}-${sizeData.size_type}`;
+            if (!processedSizes.has(sizeKey)) {
+              addSizeBlock(sizeData.size, sizeData.size_type);
+              processedSizes.add(sizeKey);
+            }
+          }
+        });
+      });
+
+      // Re-validate all size blocks after initialization
+      document.querySelectorAll(".size-block").forEach((block) => {
+        validateSizeSelection(block);
+      });
+    };
+
+    const addSizeBlock = (selectedSize = "", selectedSizeType = "standard") => {
+      const existingSizes = Array.from(
+        DOM.sizeContainer.querySelectorAll(".size-block")
+      ).map((block) => {
+        const select = block.querySelector(".size-select").value;
+        const customInput = block.querySelector(".custom-size-input");
+        return customInput && !customInput.classList.contains("hidden")
+          ? customInput.value
+          : select;
+      });
+
+      if (
+        existingSizes.includes(selectedSize) ||
+        (selectedSize === "custom" && existingSizes.includes(""))
+      ) {
+        showToast(`Size "${selectedSize || "Custom"}" is already selected.`, "error");
+        return;
+      }
+
+      const sizeId = `size_${sizeCounter++}`;
+      const isNumeric = selectedSizeType === "numeric";
+      const sizeOptions = isNumeric ? CONFIG.numericSizes : CONFIG.standardSizes;
+      const isCustomSize =
+        selectedSize &&
+        (isNumeric
+          ? !CONFIG.numericSizes.includes(parseInt(selectedSize))
+          : !CONFIG.standardSizes.includes(selectedSize));
+
+      const sizeBlock = createSizeBlockElement(
+        sizeId,
+        sizeOptions,
+        selectedSize,
+        isCustomSize,
+        selectedSizeType
+      );
+      DOM.sizeContainer.appendChild(sizeBlock);
+      setupSizeBlockEventListeners(sizeBlock, sizeId, isNumeric);
+
+      // Initialize custom colors for this size
+      const colors = getColorsForSize(selectedSize, selectedSizeType);
+      const customColors = colors.filter(
+        (color) => !CONFIG.standardColors.some((std) => std.hex === color.value)
+      );
+      const customColorContainer = sizeBlock.querySelector(".custom-color-container");
+      customColors.forEach((color) => {
+        const sizeData = getSizeDataForColorAndSize(color.value, selectedSize);
+        addCustomColorField(customColorContainer, sizeId, {
+          hex: color.value,
+          name: color.name,
+          quantity: sizeData ? sizeData.stock_quantity : 0,
+        });
+      });
+
+      validateSizeSelection(sizeBlock);
+      updateSaveButtonState();
+    };
+
+    const createSizeBlockElement = (
+      sizeId,
+      sizeOptions,
+      selectedSize,
+      isCustomSize,
+      sizeType
+    ) => {
+      const sizeBlock = document.createElement("div");
+      sizeBlock.className = "size-block mb-6 p-4 border border-gray-200 rounded-lg";
+      sizeBlock.dataset.sizeId = sizeId;
+
+      const colorInputs = generateColorInputs(sizeId, sizeType, selectedSize);
+
+      sizeBlock.innerHTML = `
+    <div class="grid grid-cols-1 sm:grid-cols-3 items-center mb-5 gap-4 p-4">
+      <div class="w-full col-span-2">
+        <label class="font-medium 3xl:text-xl 3xl:font-semibold">Size <span class="text-red-600">*</span></label>
+        <div class="relative mt-2">
+          <select name="sizes[${sizeId}][name]" id="sizes[${sizeId}][name]"
+                  class="size-select cursor-pointer mt-2 block appearance-none w-full border border-gray-300 rounded-md shadow-sm py-2 pl-3 pr-8 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+            <option value="">Select size</option>
+            ${sizeOptions
+          .map(
+            (size) =>
+              `<option value="${size}" ${selectedSize === size ? "selected" : ""
+              }>${size}</option>`
+          )
+          .join("")}
+            <option value="custom" ${isCustomSize ? "selected" : ""
+        }>Custom Size</option>
+          </select>
+          <span class="material-symbols-outlined absolute top-1/2 -translate-y-1/2 right-3 text-gray-500 rotate-90 pointer-events-none">chevron_right</span>
+        </div>
+        <input
+          type="text"
+          name="sizes[${sizeId}][custom_size]"
+          id="sizes[${sizeId}][custom_size]"
+          value="${isCustomSize && selectedSize !== "custom" ? selectedSize : ""
+        }"
+          placeholder="Enter custom size"
+          class="custom-size-input mt-3 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 ${!isCustomSize ? "hidden" : ""
+        } focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+        >
+        <p class="size-error mt-1 text-sm font-medium text-red-600 hidden"></p>
+      </div>
+      <div class="flex sm:justify-end">
+        <button type="button" class="w-fit cursor-pointer font-medium remove-size-btn px-5 py-2 bg-red-100 text-red-600 rounded-md hover:bg-red-200">Remove</button>
+      </div>
+    </div>
+    <div class="standard-colors mb-5 p-4">
+      <label class="font-medium 3xl:text-xl 3xl:font-semibold">Standard Colors</label>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-4">${colorInputs}</div>
+      <p class="color-error mt-1 text-sm font-medium text-red-600 hidden"></p>
+    </div>
+    <div class="custom-colors mb-5 px-4">
+      <div class="flex items-center text-center gap-4 mb-4">
+        <p class="font-medium 3xl:text-xl 3xl:font-semibold pb-2">Custom Colors</p>
+        <button type="button" class="add-custom-color-btn cursor-pointer">
+          <span class="material-symbols-outlined text-blue-500">add_circle</span>
+        </button>
+      </div>
+      <div class="custom-color-container mx-2"></div>
+    </div>
+  `;
+
+      return sizeBlock;
+    };
+
+    const generateColorInputs = (sizeId, sizeType, selectedSize) =>
+      CONFIG.standardColors
+        .map((color) => {
+          const sizeDataForColor = getSizeDataForColorAndSize(
+            color.hex,
+            selectedSize
+          );
+          const isColorAvailableForSize = !!sizeDataForColor;
+          const quantity = sizeDataForColor ? sizeDataForColor.stock_quantity : 0;
+
+          return `
+        <div class="flex items-center justify-between w-full gap-4">
+          <div class="flex items-center">
+            <input type="checkbox" id="${sizeId}_${color.name}"
+                   name="sizes[${sizeId}][colors][standard][${color.hex}][enabled]"
+                   value="1" class="color-checkbox h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                   ${isColorAvailableForSize ? "checked" : ""}>
+            <label for="${sizeId}_${color.name}" class="ml-3 flex items-center font-medium text-gray-700">
+              <span class="w-6 h-6 mr-2 rounded-full border border-gray-300" style="background-color:${color.hex}"></span>
+              ${color.name}
+            </label>
+            <input type="hidden" name="sizes[${sizeId}][colors][standard][${color.hex}][name]" value="${color.name}">
+          </div>
+          <input type="number" name="sizes[${sizeId}][colors][standard][${color.hex}][quantity]"
+                 value="${quantity}"
+                 class="quantity-input ml-2 block w-2/3 border border-gray-300 rounded-md sheet-sm py-1 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 ${!isColorAvailableForSize ? "hidden" : ""
+            }"
+                 placeholder="Enter quantity" min="0">
+        </div>
+      `;
+        })
+        .join("");
+
+    const addCustomColorField = (container, sizeId, colorData = { hex: "#000000", name: "", quantity: 0 }) => {
+      const colorId = `color_${Date.now()}`;
+      const colorField = document.createElement("div");
+      colorField.className = "flex items-center mb-2 space-x-4 lg:w-2/3";
+      colorField.innerHTML = `
+    <div class="border cursor-pointer border-gray-300 rounded-md shadow-sm py-1 px-3 flex items-center text-center w-1/2">
+      <div class="color-picker-wrapper flex items-center text-center">
+        <input type="color" name="sizes[${sizeId}][colors][custom][${colorId}][hex]"
+               value="${colorData.hex}" class="h-8 w-8 border border-gray-300 rounded-lg">
+        <span class="hex-value text-sm ml-1">${colorData.hex}</span>
+      </div>
+      <input type="text" name="sizes[${sizeId}][colors][custom][${colorId}][name]"
+             placeholder="Color name" value="${colorData.name}" class="custom-color-name ml-2 block w-1/2 border-none focus:outline-none">
+    </div>
+    <input type="number" name="sizes[${sizeId}][colors][custom][${colorId}][quantity]"
+           min="0" value="${colorData.quantity}" class="custom-color-quantity block w-1/2 border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Enter Quantity">
+    <button type="button" class="remove-color-btn ml-2">
+      <span class="material-symbols-outlined text-red-600 bg-red-100 rounded-full">cancel</span>
+    </button>
+  `;
+      container.appendChild(colorField);
+
+      const colorInputDiv = colorField.querySelector(".color-picker-wrapper");
+      const colorInput = colorField.querySelector('input[type="color"]');
+      const hexValue = colorField.querySelector(".hex-value");
+      const removeBtn = colorField.querySelector(".remove-color-btn");
+      const nameInput = colorField.querySelector(".custom-color-name");
+      const quantityInput = colorField.querySelector(".custom-color-quantity");
+
+      colorInputDiv.addEventListener("click", () => {
+        if (colorInput) {
+          colorInput.click();
+        }
+      });
+
+      colorInput.addEventListener("input", () => {
+        hexValue.textContent = colorInput.value;
+        generateImageUploadFields();
+        updateSaveButtonState();
+      });
+
+      nameInput.addEventListener("input", () => {
+        generateImageUploadFields();
+        updateSaveButtonState();
+      });
+
+      quantityInput.addEventListener("input", () => {
+        updateSaveButtonState();
+      });
+
+      removeBtn.addEventListener("click", () => {
+        colorField.remove();
+        generateImageUploadFields();
+        updateSaveButtonState();
+      });
+
+      generateImageUploadFields();
+    };
+
+    const validateSizeSelection = (currentBlock) => {
+      const sizeSelect = currentBlock.querySelector(".size-select");
+      const customSizeInput = currentBlock.querySelector(".custom-size-input");
+      const sizeError = currentBlock.querySelector(".size-error");
+      let currentSize = sizeSelect.value;
+
+      if (currentSize === "custom") {
+        currentSize = customSizeInput.value.trim();
+      }
+
+      if (!currentSize) {
+        sizeError.classList.add("hidden");
+        return true;
+      }
+
+      const allSizeBlocks = document.querySelectorAll(".size-block");
+      let isDuplicate = false;
+
+      allSizeBlocks.forEach((block) => {
+        if (block === currentBlock) return;
+        const otherSelect = block.querySelector(".size-select");
+        const otherCustomInput = block.querySelector(".custom-size-input");
+        let otherSize = otherSelect.value;
+
+        if (otherSize === "custom") {
+          otherSize = otherCustomInput.value.trim();
+        }
+
+        if (otherSize && otherSize === currentSize) {
+          isDuplicate = true;
+        }
+      });
+
+      if (isDuplicate) {
+        showToast(
+          `Size "${currentSize}" is already selected. Please choose a different size.`,
+          "error"
+        );
+        sizeError.textContent = `Size "${currentSize}" is already selected.`;
+        sizeError.classList.remove("hidden");
+        sizeSelect.value = "";
+        customSizeInput.value = "";
+        customSizeInput.classList.add("hidden");
+        generateImageUploadFields();
+        updateSaveButtonState();
+        return false;
+      } else {
+        sizeError.classList.add("hidden");
+        return true;
+      }
+    };
+
+    const setupSizeBlockEventListeners = (sizeBlock, sizeId, isNumeric) => {
+      sizeBlock.querySelectorAll(".color-checkbox").forEach((checkbox) => {
+        checkbox.addEventListener("change", function () {
+          const quantityInput = this.closest(".flex.items-center").nextElementSibling;
+          quantityInput.classList.toggle("hidden", !this.checked);
+          quantityInput.toggleAttribute("disabled", !this.checked);
+          if (!this.checked) quantityInput.value = "0";
+          generateImageUploadFields();
+          updateSaveButtonState();
+        });
+      });
+
+      const sizeSelect = sizeBlock.querySelector(".size-select");
+      const customSizeInput = sizeBlock.querySelector(".custom-size-input");
+      const addCustomColorBtn = sizeBlock.querySelector(".add-custom-color-btn");
+
+      sizeSelect.addEventListener("change", function () {
+        customSizeInput.classList.toggle("hidden", this.value !== "custom");
+        if (this.value !== "custom") customSizeInput.value = "";
+        sizeBlock.querySelector(`input[name="sizes[${sizeId}][custom_size]"]`).value =
+          this.value === "custom" ? "" : this.value;
+        sizeBlock.querySelector(`select[name="sizes[${sizeId}][name]"]`).value = this.value;
+        validateSizeSelection(sizeBlock);
+        generateImageUploadFields();
+      });
+
+      customSizeInput.addEventListener("input", () => {
+        validateSizeSelection(sizeBlock);
+        generateImageUploadFields();
+      });
+
+      addCustomColorBtn.addEventListener("click", () => {
+        addCustomColorField(sizeBlock.querySelector(".custom-color-container"), sizeId);
+      });
+
+      sizeBlock.querySelector(".remove-size-btn").addEventListener("click", () => {
+        sizeBlock.remove();
+        generateImageUploadFields();
+        updateSaveButtonState();
+      });
+    };
+
+    // Image Upload Management
+    const generateImageUploadFields = () => {
+      DOM.variantImagesContainer.innerHTML = "";
+      const colorGroups = {};
+
+      // Process all colors (standard + custom) and group them by color hex and name
+      const allColorElements = [
+        ...document.querySelectorAll('.standard-colors input[type="checkbox"]:checked'),
+        ...document.querySelectorAll('.custom-color-container > div')
+      ];
+
+      allColorElements.forEach(element => {
+        let colorHex, colorName;
+
+        // Handle standard colors
+        if (element.type === 'checkbox') {
+          const match = element.name.match(/\[standard\]\[(.*?)\]/);
+          if (!match) return;
+          colorHex = match[1];
+          const colorNameInput = element.closest("div").querySelector(`input[name*="[${colorHex}][name]"]`);
+          colorName = colorNameInput ? colorNameInput.value : colorHex;
+        }
+        // Handle custom colors
+        else {
+          const hexInput = element.querySelector('input[type="color"]');
+          const nameInput = element.querySelector('input[placeholder="Color name"]');
+          if (!hexInput || !nameInput?.value.trim()) return;
+
+          colorHex = hexInput.value;
+          colorName = nameInput.value.trim();
+        }
+
+        // Create a unique key for this color
+        const colorKey = `${colorHex}_${colorName}`;
+
+        if (!colorGroups[colorKey]) {
+          colorGroups[colorKey] = {
+            colorHex,
+            colorName,
+            sizes: new Set(),
+            existingImages: []
+          };
+
+          // Find existing images for this color from product data
+          if (productData?.colors) {
+            const colorData = productData.colors.find(c =>
+              (c.value === colorHex || c.value === colorHex.toLowerCase()) &&
+              c.name === colorName
+            );
+            if (colorData?.images) {
+              colorGroups[colorKey].existingImages = colorData.images.map(img => ({
+                url: img.url || img, // Handle both object and string formats
+                id: img.id || null   // Include image ID if available
+              }));
+            }
+          }
+        }
+
+        // Add all sizes that have this color
+        document.querySelectorAll(".size-block").forEach(sizeBlock => {
+          const sizeName = getSizeNameFromBlock(sizeBlock);
+
+          // Check if this size has the current color
+          if (element.type === 'checkbox') {
+            const isChecked = sizeBlock.querySelector(`.standard-colors input[name*="[standard][${colorHex}]"]:checked`);
+            if (isChecked) colorGroups[colorKey].sizes.add(sizeName);
+          } else {
+            const customColorInput = sizeBlock.querySelector(`.custom-color-container input[value="${colorHex}"]`);
+            if (customColorInput) {
+              const colorNameInput = customColorInput.closest("div").querySelector('input[placeholder="Color name"]');
+              if (colorNameInput?.value.trim() === colorName) {
+                colorGroups[colorKey].sizes.add(sizeName);
+              }
+            }
+          }
+        });
+      });
+
+      // Create one upload section per unique color group
+      Object.values(colorGroups).forEach(colorGroup => {
+        if (colorGroup.sizes.size > 0) {
+          const sizesList = Array.from(colorGroup.sizes).join(', ');
+          const uploadId = `upload_${colorGroup.colorHex.replace('#', '')}_${colorGroup.colorName.replace(/\s+/g, '_')}`;
+
+          createImageUploadSection(
+            uploadId,
+            `${colorGroup.colorName} (Sizes: ${sizesList})`,
+            colorGroup.existingImages
+          );
+        }
+      });
+    };
+
+    const getSizeNameFromBlock = (sizeBlock) => {
+      const isCustom = sizeBlock.querySelector(".size-select").value === "custom";
+      return isCustom
+        ? sizeBlock.querySelector(".custom-size-input").value
+        : sizeBlock.querySelector(".size-select").value;
+    };
+
+    const createImageUploadSection = (uploadId, title, existingImages = []) => {
+      const imageUploadDiv = document.createElement("div");
+      imageUploadDiv.className = "mb-6 p-4 border border-gray-300 rounded-xl shadow-sm";
+
+      // Extract clean color name for form data keys
+      const colorMatch = title.match(/(.*?)\s*\(/);
+      const colorName = colorMatch ? colorMatch[1].trim() : 'unknown';
+
+      imageUploadDiv.innerHTML = `
+        <h4 class="text-md font-semibold text-gray-700 mb-2">${title}</h4>
+        <div class="flex flex-col space-y-4">
+            <div class="flex items-center space-x-4">
+                <label for="${uploadId}" class="cursor-pointer flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-700 hover:bg-gray-50 transition duration-150 ease-in-out">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                    Select Images
+                </label>
+                <span class="text-sm text-gray-500">Max ${CONFIG.maxImagesPerVariant} images</span>
+            </div>
+            <input type="file" id="${uploadId}" name="images[${colorName}]" multiple class="hidden" accept="image/*">
+            <div id="preview_${uploadId}" class="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-2"></div>
+        </div>
+    `;
+
+      // Add existing images to preview
+      const previewContainer = imageUploadDiv.querySelector(`#preview_${uploadId}`);
+
+      existingImages.forEach(image => {
+        // Handle both string (URL only) and object (URL + ID) formats
+        const imageUrl = typeof image === 'string' ? image : image.url;
+        const imageId = typeof image === 'string' ? null : image.id;
+
+        const imgWrapper = document.createElement("div");
+        imgWrapper.className = "relative group";
+        imgWrapper.innerHTML = `
+            <img src="${imageUrl}" class="w-full h-32 object-cover rounded-lg shadow">
+            <input type="hidden" name="existing_images[${colorName}][${imageId || ''}]" value="${imageUrl}">
+            <button type="button" class="absolute top-1 right-1 bg-red-500 text-white w-6 h-6 rounded-full text-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition">×</button>
+        `;
+        previewContainer.appendChild(imgWrapper);
+
+        // Add remove functionality
+        imgWrapper.querySelector('button').addEventListener('click', () => {
+          imgWrapper.remove();
+          updateSaveButtonState();
+        });
+      });
+
+      DOM.variantImagesContainer.appendChild(imageUploadDiv);
+      setupCustomUpload(uploadId, existingImages);
+    };
+    const setupCustomUpload = (uploadId, existingImages = []) => {
+      const fileInput = document.getElementById(uploadId);
+      const previewContainer = document.getElementById(`preview_${uploadId}`);
+      const files = existingImages.map((url) => ({ url, isExisting: true }));
+
+      updatePreview(previewContainer, files);
+
+      fileInput.addEventListener("change", (e) => {
+        const newFiles = Array.from(e.target.files);
+        if (files.length + newFiles.length > CONFIG.maxImagesPerVariant) {
+          showToast(
+            `You can upload a maximum of ${CONFIG.maxImagesPerVariant} images per color variation.`,
+            "error"
+          );
+          return;
+        }
+        files.push(...newFiles.map((file) => ({ file, isExisting: false })));
+        updatePreview(previewContainer, files);
+        updateSaveButtonState();
+      });
+
+      document
+        .querySelector(`label[for="${uploadId}"]`)
+        .addEventListener("click", (e) => {
+          if (files.length >= CONFIG.maxImagesPerVariant) {
+            e.preventDefault();
+            showToast(
+              `You have reached the maximum of ${CONFIG.maxImagesPerVariant} images for this variation.`,
+              "error"
+            );
+          }
+        });
+    };
+
+    const updatePreview = (container, files) => {
+      container.innerHTML = "";
+      files.forEach((item, index) => {
+        const imgWrapper = document.createElement("div");
+        imgWrapper.className = "relative group";
+        const img = document.createElement("img");
+        img.className = "w-full h-32 object-cover rounded-lg shadow";
+
+        // Handle both existing and new files
+        if (item.isExisting) {
+          // Corrected path to access URL and ID
+          const imageUrl = item.url?.url || item.url;
+          const imageId = item.url?.id;
+
+          img.src = imageUrl;
+
+          // Store the ID in a data attribute if available
+          if (imageId) {
+            imgWrapper.dataset.imageId = imageId;
+            imgWrapper.dataset.isExisting = "true";
+          }
+
+          // Add hidden input for form submission
+          const hiddenInput = document.createElement("input");
+          hiddenInput.type = "hidden";
+          hiddenInput.name = `existing_images[${imageId || 'no-id'}]`;
+          hiddenInput.value = imageUrl;
+          imgWrapper.appendChild(hiddenInput);
+        } else {
+          // Handle new file uploads
+          const reader = new FileReader();
+          reader.onload = (e) => (img.src = e.target.result);
+          reader.readAsDataURL(item.file);
+
+          // Mark as new upload
+          imgWrapper.dataset.isExisting = "false";
+        }
+
+        const removeBtn = document.createElement("button");
+        removeBtn.innerHTML = "×";
+        removeBtn.className = "absolute top-1 right-1 bg-red-500 text-white w-6 h-6 rounded-full text-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition";
+        removeBtn.title = "Remove image";
+
+        removeBtn.addEventListener("click", async (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+
+          try {
+            if (item.isExisting) {
+              const imageId = imgWrapper.dataset.imageId;
+              const formData = new FormData();
+              formData.append('image_id', imageId);
+              formData.append('product_id', "{{ product.id }}");
+              if (imageId) {
+                const response = await sendPostRequest('/api/products/remove-image', formData, 'DELETE')
+                if (response) {
+                  files.splice(index, 1);
+                  updatePreview(container, files);
+                  updateSaveButtonState();
+                  showToast("Image removed successfully", "success");
+                } else {
+                  showToast("Failed to remove image", "error");
+                }
+              } else {
+                showToast("Cannot remove image: Missing ID", "error");
+              }
+            } else {
+              files.splice(index, 1);
+              updatePreview(container, files);
+              updateSaveButtonState();
+            }
+          } catch (error) {
+            console.error("Error removing image:", error);
+            showToast("Error removing image", "error");
+          }
+        });
+
+        imgWrapper.appendChild(img);
+        imgWrapper.appendChild(removeBtn);
+        container.appendChild(imgWrapper);
+      });
+    };
+
+    // Form Submission
+    const handleFormSubmission = async (e) => {
+      e.preventDefault();
+      if (!validateForm()) return;
+      const formData = prepareFormData();
+      if (!formData) return;
+
+      try {
+        setLoadingState(true);
+        const response = await sendPostRequest("/api/products/edit", formData, 'PUT');
+        if (!response.success) {
+          showToast(response.message || "Failed to update product", 'error');
+        }
+        showToast(response.message, "success");
+        window.location.href = "/products/list";
+      } catch (error) {
+        handleSubmissionError(error);
+      } finally {
+        setLoadingState(false);
+      }
+    };
+
+    const validateColorQuantities = () => {
+      let isValid = true;
+
+      document.querySelectorAll(".size-block").forEach((sizeBlock) => {
+        sizeBlock.querySelectorAll(".quantity-input").forEach((input) => {
+          if (
+            !input.classList.contains("hidden") &&
+            (isNaN(input.value) || parseInt(input.value) <= 0)
+          ) {
+            input.classList.add("border-red-500");
+            isValid = false;
+          } else {
+            input.classList.remove("border-red-500");
+          }
+        });
+        sizeBlock.querySelectorAll(".custom-color-quantity").forEach((input) => {
+          const nameInput = input
+            .closest("div")
+            .querySelector('input[placeholder="Color name"]');
+          if (
+            nameInput?.value.trim() &&
+            (isNaN(input.value) || parseInt(input.value) <= 0)
+          ) {
+            input.classList.add("border-red-500");
+            isValid = false;
+          } else {
+            input.classList.remove("border-red-500");
+          }
+        });
+      });
+
+      if (!isValid) {
+        showToast("All color quantities must be greater than 0", "error");
+      }
+
+      return isValid;
+    };
+
+    const validateImageSelection = () => {
+      let isValid = true;
+      const uploadContainers = document.querySelectorAll('[id^="preview_upload_"]');
+
+      uploadContainers.forEach((container) => {
+        if (container.querySelectorAll("img").length === 0) {
+          const idParts = container.id.split('_');
+          const colorName = idParts[idParts.length - 1];
+          showToast(`Please upload at least one image for ${colorName}`, "error");
+          isValid = false;
+        }
+      });
+
+      return isValid;
+    };
+
+    const validateSizes = () => {
+      let isValid = true;
+      const sizes = new Set();
+
+      document.querySelectorAll(".size-block").forEach((block) => {
+        const sizeName = getSizeNameFromBlock(block);
+        if (!sizeName) {
+          showToast("Please select a size for all size blocks.", "error");
+          isValid = false;
+          return;
+        }
+        if (sizes.has(sizeName)) {
+          showToast(`Duplicate size "${sizeName}" detected.`, "error");
+          isValid = false;
+        } else {
+          sizes.add(sizeName);
+        }
+      });
+
+      return isValid;
+    };
+
+    const validateForm = () => {
+      const isDetailsValid = quill.root.innerHTML.trim() !== "<p><br></p>";
+      const isSizesValid = document.querySelectorAll(".size-block").length > 0;
+      const isColorsValid = Array.from(document.querySelectorAll(".size-block")).every(
+        (block) =>
+          block.querySelectorAll('.standard-colors input[type="checkbox"]:checked')
+            .length > 0 ||
+          block.querySelectorAll('.custom-color-container > div input[placeholder="Color name"][value]:not([value=""])')
+            .length > 0
+      );
+
+      const areQuantitiesValid = validateColorQuantities();
+      const areImagesValid = validateImageSelection();
+      const areSizesUnique = validateSizes();
+
+      if (!isDetailsValid) showToast("Product details cannot be empty.", "error");
+      if (!isSizesValid) showToast("At least one size must be added.", "error");
+      if (!isColorsValid) showToast("Each size must have at least one color selected.", "error");
+
+      return isDetailsValid && isSizesValid && isColorsValid && areQuantitiesValid && areImagesValid && areSizesUnique;
+    };
+
+    const prepareFormData = () => {
+      const formData = new FormData();
+      const variations = [];
+      const sizeBlocks = document.querySelectorAll('.size-block');
+      const processedColors = new Set();
+
+      // Get basic form values
+      const formValues = {
+        product_id: "{{ product.id }}",
+        name: document.getElementById('title').value,
+        description: document.getElementById('description').value,
+        details: quill.root.innerHTML,
+        price: document.getElementById('price').value,
+        discount_price: document.getElementById('discount_price').value,
+        stock_quantity: document.getElementById('stock').value,
+        category_id: "{{ product.category.id }}",
+        subcategory_id: "{{ product.sub_category.id }}",
+        subsubcategory_id: "{{ product.sub_sub_category.id }}"
+      };
+
+      // Append basic form values to FormData
+      for (const key in formValues) {
+        if (formValues[key] !== undefined && formValues[key] !== null) {
+          formData.append(key, formValues[key]);
+        }
+      }
+
+      // Handle brand
+      const brandSelect = DOM.brandSelect;
+      if (brandSelect) {
+        const brandValue = brandSelect.value;
+        formData.append('brand_id', brandValue === 'other' ? DOM.otherBrandInput.value : brandValue);
+      }
+
+      // Handle thumbnail upload
+      const thumbnailInput = document.getElementById('thumbnail');
+      if (thumbnailInput && thumbnailInput.files.length > 0) {
+        formData.append('thumbnail', thumbnailInput.files[0]);
+      }
+
+      // Process all standard colors
+      document.querySelectorAll('.standard-colors input[type="checkbox"]:checked').forEach(checkbox => {
+        const colorHex = checkbox.name.match(/\[standard\]\[(.*?)\]/)[1];
+        const colorNameInput = checkbox.closest('div').querySelector(`input[name*="[${colorHex}][name]"]`);
+        const colorName = colorNameInput ? colorNameInput.value : colorHex;
+
+        if (processedColors.has(colorName)) return;
+        processedColors.add(colorName);
+
+        // Generate uploadId consistent with createImageUploadSection
+        const uploadId = `upload_${colorHex.replace('#', '')}_${colorName.replace(/\s+/g, '_')}`;
+        const fileInput = document.getElementById(uploadId);
+        const previewContainer = document.getElementById(`preview_${uploadId}`);
+
+        // Get all sizes that have this color
+        const sizesWithThisColor = [];
+        sizeBlocks.forEach(sizeBlock => {
+          const sizeName = getSizeNameFromBlock(sizeBlock);
+          const isChecked = sizeBlock.querySelector(`.standard-colors input[name*="[standard][${colorHex}]"]:checked`);
+          if (isChecked && sizeName) sizesWithThisColor.push(sizeName);
+        });
+
+        // Append existing images
+        if (previewContainer) {
+          const existingImages = previewContainer.querySelectorAll(`input[name="existing_images[${colorName}][]"]`);
+          existingImages.forEach(input => {
+            sizesWithThisColor.forEach(size => {
+              if (input.value) {
+                formData.append(`existing_images[${colorName}][${size}]`, input.value);
+              }
+            });
+          });
+        }
+
+        // Append new images
+        if (fileInput && fileInput.files && fileInput.files.length > 0) {
+          Array.from(fileInput.files).forEach((file, fileIndex) => {
+            sizesWithThisColor.forEach(size => {
+              formData.append(`images[${colorName}][${size}]`, file, `image_${fileIndex}_${size}.${file.name.split('.').pop()}`);
+            });
+          });
+        } else {
+          console.warn(`No file input found for uploadId: ${uploadId}`);
+        }
+      });
+
+      // Process all custom colors
+      document.querySelectorAll('.custom-color-container > div').forEach(customColorDiv => {
+        const hexInput = customColorDiv.querySelector('input[type="color"]');
+        const nameInput = customColorDiv.querySelector('input[placeholder="Color name"]');
+
+        if (hexInput && nameInput && nameInput.value.trim()) {
+          const colorHex = hexInput.value;
+          const colorName = nameInput.value.trim();
+          const customColorId = nameInput.name.match(/\[custom\]\[(.*?)\]/)[1];
+
+          if (processedColors.has(colorName)) return;
+          processedColors.add(colorName);
+
+          // Generate uploadId consistent with createImageUploadSection
+          const uploadId = `upload_${colorHex.replace('#', '')}_${colorName.replace(/\s+/g, '_')}`;
+          const fileInput = document.getElementById(uploadId);
+          const previewContainer = document.getElementById(`preview_${uploadId}`);
+
+          // Get all sizes that have this color
+          const sizesWithThisColor = [];
+          sizeBlocks.forEach(sizeBlock => {
+            const sizeName = getSizeNameFromBlock(sizeBlock);
+            const customColorInput = sizeBlock.querySelector(`.custom-color-container input[value="${colorHex}"]`);
+            if (customColorInput && customColorInput.closest('div').querySelector('input[placeholder="Color name"]').value.trim() === colorName && sizeName) {
+              sizesWithThisColor.push(sizeName);
+            }
+          });
+
+          // Append existing images
+          if (previewContainer) {
+            const existingImages = previewContainer.querySelectorAll(`input[name="existing_images[${colorName}][]"]`);
+            existingImages.forEach(input => {
+              sizesWithThisColor.forEach(size => {
+                if (input.value) {
+                  formData.append(`existing_images[${colorName}][${size}]`, input.value);
+                }
+              });
+            });
+          }
+
+          // Append new images
+          if (fileInput && fileInput.files && fileInput.files.length > 0) {
+            Array.from(fileInput.files).forEach((file, fileIndex) => {
+              sizesWithThisColor.forEach(size => {
+                formData.append(`images[${colorName}][${size}]`, file, `image_${fileIndex}_${size}.${file.name.split('.').pop()}`);
+              });
+            });
+          } else {
+            console.warn(`No file input found for uploadId: ${uploadId}`);
+          }
+        }
+      });
+
+      // Process variations
+      sizeBlocks.forEach(sizeBlock => {
+        const sizeName = getSizeNameFromBlock(sizeBlock);
+
+        // Standard colors
+        sizeBlock.querySelectorAll('.standard-colors input[type="checkbox"]:checked').forEach(checkbox => {
+          const colorHex = checkbox.name.match(/\[standard\]\[(.*?)\]/)[1];
+          const colorNameInput = checkbox.closest('div').querySelector(`input[name*="[${colorHex}][name]"]`);
+          const colorName = colorNameInput ? colorNameInput.value : colorHex;
+          const quantityInput = checkbox.closest('div').nextElementSibling;
+          const quantity = parseInt(quantityInput.value) || 0;
+
+          if (sizeName && colorName && colorHex) {
+            variations.push({
+              size: sizeName,
+              color: colorName,
+              stock_quantity: quantity,
+              color_hexa_code: colorHex
+            });
+          }
+        });
+
+        // Custom colors
+        sizeBlock.querySelectorAll('.custom-color-container > div').forEach(customColorDiv => {
+          const hexInput = customColorDiv.querySelector('input[type="color"]');
+          const nameInput = customColorDiv.querySelector('input[placeholder="Color name"]');
+          const quantityInput = customColorDiv.querySelector('.custom-color-quantity');
+
+          if (hexInput && nameInput && nameInput.value.trim()) {
+            const quantity = parseInt(quantityInput.value) || 0;
+            const colorHex = hexInput.value;
+            const colorName = nameInput.value.trim();
+
+            variations.push({
+              size: sizeName,
+              color: colorName,
+              stock_quantity: quantity,
+              color_hexa_code: colorHex
+            });
+          }
+        });
+      });
+
+      formData.append('variations', JSON.stringify(variations));
+      return formData;
+    };
+
+    const handleSubmissionError = (error) => {
+      console.error("Update error:", error);
+      showToast(`Error: ${error.message}`, "error");
+    };
+
+    const setLoadingState = (isLoading) => {
+      DOM.saveBtn.disabled = isLoading;
+      DOM.saveBtn.innerHTML = isLoading
+        ? '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...'
+        : "Save Changes";
+    };
+
+    const getFormState = () => {
+      return {
+        title: document.getElementById("title").value,
+        description: document.getElementById("description").value,
+        details: quill.root.innerHTML,
+        price: document.getElementById("price").value,
+        discount_price: document.getElementById("discount_price").value,
+        stock: document.getElementById("stock").value,
+        brand:
+          DOM.brandSelect.value === "other"
+            ? DOM.otherBrandInput.value
+            : DOM.brandSelect.value,
+        sizes: Array.from(document.querySelectorAll(".size-block")).map((sizeBlock) => {
+          const sizeName = getSizeNameFromBlock(sizeBlock);
+          const sizeId = sizeBlock.dataset.sizeId;
+          const standardColors = Array.from(
+            sizeBlock.querySelectorAll('.standard-colors input[type="checkbox"]:checked')
+          ).map((checkbox) => {
+            const colorHex = checkbox.name.match(/\[standard\]\[(.*?)\]/)[1];
+            const quantity = parseInt(checkbox.closest("div").nextElementSibling.value) || 0;
+            return { colorHex, quantity };
+          });
+          const customColors = Array.from(
+            sizeBlock.querySelectorAll(".custom-color-container > div")
+          )
+            .map((customColorDiv) => {
+              const hexInput = customColorDiv.querySelector('input[type="color"]');
+              const nameInput = customColorDiv.querySelector('input[placeholder="Color name"]');
+              const quantityInput = customColorDiv.querySelector(".custom-color-quantity");
+              return {
+                colorHex: hexInput?.value,
+                colorName: nameInput?.value,
+                quantity: parseInt(quantityInput?.value) || 0,
+              };
+            })
+            .filter((color) => color.colorName && color.colorName.trim());
+          return { sizeName, sizeId, standardColors, customColors };
+        }),
+        images: Array.from(document.querySelectorAll('[id^="preview_upload_"]')).map(
+          (container) => ({
+            id: container.id,
+            count: container.querySelectorAll("img").length,
+          })
+        ),
+      };
+    };
+
+    const hasFormChanged = () => {
+      const currentState = getFormState();
+      return JSON.stringify(currentState) !== JSON.stringify(initialFormState);
+    };
+
+    const updateSaveButtonState = () => {
+      DOM.saveBtn.disabled = !hasFormChanged();
+    };
+
+    const setupFormChangeListeners = () => {
+      document.getElementById("title").addEventListener("input", updateSaveButtonState);
+      document
+        .getElementById("description")
+        .addEventListener("input", updateSaveButtonState);
+      document.getElementById("price").addEventListener("input", updateSaveButtonState);
+      document
+        .getElementById("discount_price")
+        .addEventListener("input", updateSaveButtonState);
+      document.getElementById("stock").addEventListener("input", updateSaveButtonState);
+      DOM.brandSelect.addEventListener("change", updateSaveButtonState);
+      DOM.otherBrandInput.addEventListener("input", updateSaveButtonState);
+
+      quill.on("text-change", updateSaveButtonState);
+
+      document.addEventListener("change", (e) => {
+        if (
+          e.target.matches(
+            '.size-select, .custom-size-input, .color-checkbox, .quantity-input, input[type="color"], input[placeholder="Color name"], .custom-color-quantity'
+          )
+        ) {
+          updateSaveButtonState();
+        }
+      });
+
+      document.addEventListener("change", (e) => {
+        if (e.target.matches('input[type="file"]')) {
+          updateSaveButtonState();
+        }
+      });
+
+      document.addEventListener("click", (e) => {
+        if (e.target.matches('[id^="preview_upload_"] button') || e.target.matches(".remove-color-btn")) {
+          setTimeout(updateSaveButtonState, 0);
+        }
+      });
+
+      DOM.sizeContainer.addEventListener("DOMNodeRemoved", updateSaveButtonState);
+      DOM.addSizeBtn.addEventListener("click", () => {
+        setTimeout(updateSaveButtonState, 0);
+      });
+    };
+
+    // Event Listeners
+    DOM.sizeTypeRadios.forEach((radio) =>
+      radio.addEventListener("change", () => {
+        if (radio.checked) {
+          initializeForm();
+          generateImageUploadFields();
+          updateSaveButtonState();
+        }
+      })
+    );
+
+    DOM.addSizeBtn.addEventListener("click", () => {
+      addSizeBlock("", getCurrentSizeType());
+      generateImageUploadFields();
+    });
+
+    DOM.saveBtn.addEventListener("click", handleFormSubmission);
+
+    // Initialize
+    await initializeBrandSelect();
+    initializeProductData();
+    setupFormChangeListeners();
+    updateSaveButtonState();
+  });
+</script>
+{% endblock %}

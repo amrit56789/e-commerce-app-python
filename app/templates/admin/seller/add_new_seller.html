@@ -1,0 +1,258 @@
+{% extends "base.html" %}
+
+{% block title %}Add Seller{% endblock %}
+
+{% block admin_content %}
+<div class="min-h-screen">
+  <div class="w-full mx-auto">
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden p-6 md:p-8">
+      <div class="text-center mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">Register New Seller</h1>
+        <p class="mt-2 text-sm text-gray-600">Fill in the seller details below to create a new seller account</p>
+      </div>
+
+      <form id="sellerForm" class="space-y-6">
+        <!-- Personal Information Step -->
+        {% include "admin/seller/sellerFormSteps/seller_personal_info.html" %}
+
+        <!-- Business Information Step -->
+        {% include "admin/seller/sellerFormSteps/seller_business_info.html" %}
+
+        <!-- Business Details Step -->
+        {% include "admin/seller/sellerFormSteps/seller_business_document_info.html" %}
+      </form>
+
+      <div class="pt-6 flex justify-between">
+        <!-- Back Button -->
+        <button type="button"
+          class="w-48 bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+          id="backStep">Back</button>
+
+        <!-- Next Button -->
+        <button type="submit"
+          class="w-48 flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out">
+          <span id="nextStep" class="btn-text">Next</span>
+          <div id="loading-spinner" class="hidden">
+            <span class="material-symbols-outlined animate-spin text-white text-xl">
+              progress_activity
+            </span>
+          </div>
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('sellerForm');
+    const steps = document.querySelectorAll('.step');
+    const nextBtn = document.querySelector('button[type="submit"]');
+    const backBtn = document.getElementById('backStep');
+    const loader = document.getElementById('loading-spinner');
+    const nextBtnText = document.getElementById('nextStep');
+
+    const hiddenInput = document.getElementById('business_address_type_input');
+    const options = document.querySelectorAll('#business-type-options .option');
+
+
+    let currentStepIndex = 0;
+    const formData = {};
+
+    function initForm() {
+      showStep(currentStepIndex);
+      updateButtonStates();
+      initFieldValidation();
+    }
+
+    function showStep(index) {
+      steps.forEach((step, idx) => {
+        step.style.display = idx === index ? 'block' : 'none';
+      });
+    }
+
+    function updateButtonStates() {
+      backBtn.style.display = currentStepIndex === 0 ? 'none' : 'block';
+      nextBtnText.textContent = currentStepIndex === steps.length - 1 ? 'Register Seller' : 'Next';
+    }
+
+    function validateCurrentStep() {
+      let isValid = false;
+      switch (currentStepIndex) {
+        case 0:
+          const personalInfo = validatePersonalInfo();
+          if (personalInfo) {
+            formData.personalInfo = personalInfo;
+            isValid = true;
+          }
+          break;
+        case 1:
+          const businessInfo = validateBusinessInfo();
+          if (businessInfo) {
+            formData.businessInfo = businessInfo;
+            isValid = true;
+          }
+          break;
+        case 2:
+          const businessDetails = validateBusinessDetails();
+          if (businessDetails) {
+            formData.businessDetails = businessDetails;
+            isValid = true;
+          }
+          break;
+        default:
+          isValid = true;
+      }
+      return isValid;
+    }
+
+    // Handle next button click
+    nextBtn.addEventListener('click', async function (e) {
+      e.preventDefault(); // Prevent default form submission
+
+      // Validate current step
+      if (!validateCurrentStep()) {
+        return;
+      }
+
+      // If not last step, proceed to next step
+      if (currentStepIndex < steps.length - 1) {
+        currentStepIndex++;
+        showStep(currentStepIndex);
+        updateButtonStates();
+      }
+      // If last step, submit the form
+      else {
+        nextBtn.disabled = true;
+        loader.classList.remove('hidden');
+        nextBtnText.classList.add('hidden');
+
+        try {
+          await submitForm();
+        } catch (error) {
+          console.error('Submission error:', error);
+          showToast('Submission error: Please try again later.', 'error');
+        } finally {
+          nextBtn.disabled = false;
+          loader.classList.add('hidden');
+          nextBtnText.classList.remove('hidden');
+        }
+      }
+    });
+
+    backBtn.addEventListener('click', function (e) {
+      e.preventDefault();
+      if (currentStepIndex > 0) {
+        currentStepIndex--;
+        showStep(currentStepIndex);
+        updateButtonStates();
+      }
+    });
+    async function submitForm() {
+      if (!validateCurrentStep()) return;
+
+      // Show the loader (spinner)
+      loader.classList.remove('hidden');
+      nextBtnText.classList.add('hidden');
+      nextBtn.disabled = true;
+
+      try {
+
+        const formDataObj = new FormData();
+
+        // Flat fields
+        formDataObj.append('first_name', formData.personalInfo.first_name);
+        formDataObj.append('last_name', formData.personalInfo.last_name);
+        formDataObj.append('email', formData.personalInfo.email);
+        formDataObj.append('phoneNumber', formData.personalInfo.phoneNumber);
+
+        // Flatten address for backend expectation
+        Object.keys(formData.personalInfo.address).forEach((key) => {
+          formDataObj.append(`address[${key}]`, formData.personalInfo.address[key]);
+        });
+
+        formDataObj.append('businessName', formData.businessInfo.businessName);
+        formDataObj.append('businessType', formData.businessInfo.businessType);
+        formDataObj.append('businessEmail', formData.businessInfo.businessEmail);
+        formDataObj.append('businessMobile', formData.businessInfo.businessMobile);
+        formDataObj.append('gstNumber', formData.businessInfo.gstNumber);
+
+        // Flatten businessAddress for backend expectation
+        Object.keys(formData.businessInfo.businessAddress).forEach((key) => {
+          formDataObj.append(`businessAddress[${key}]`, formData.businessInfo.businessAddress[key]);
+        });
+
+        formDataObj.append('panNumber', formData.businessDetails.panNumber);
+        formDataObj.append('idNumber', formData.businessDetails.idNumber);
+        formDataObj.append('addressProofIdType', formData.businessDetails.addressProofIdType);
+
+        // Add files
+        formDataObj.append('panCardFront', formData.businessDetails.panCardFront);
+        formDataObj.append('addressProofFront', formData.businessDetails.addressProofFront);
+        formDataObj.append('addressProofBack', formData.businessDetails.addressProofBack);
+
+        for (let [key, value] of formDataObj.entries()) {
+          console.log(`${key}: ${value}`);
+        }
+
+        const result = await sendPostRequest('/user/add-new-seller', formDataObj);
+
+        loader.classList.add('hidden');
+        nextBtn.classList.remove('hidden');
+
+        if (result.success) {
+          form.reset();
+          currentStepIndex = 0;
+          initForm();
+          showToast(result.message || 'Seller registered successfully!', 'success');
+        } else {
+          handleErrors(result.errors);
+        }
+      } catch (error) {
+        loader.classList.add('hidden');
+        nextBtnText.classList.remove('hidden');
+        nextBtn.disabled = false;
+        console.error('Submission error:', error);
+        showToast('Submission error: Please try again later.', 'error');
+      }
+    }
+
+    // Rest of your code (submitForm, handleErrors, etc.) remains the same
+    initForm();
+
+    const indianStates = {{ INDIAN_STATES | tojson
+  }};
+
+  const stateDropdown = document.getElementById('state');
+  const businessStateDropdown = document.getElementById('business_state');
+
+  indianStates.forEach(state => {
+    const option = document.createElement('option');
+    option.value = state;
+    option.textContent = state;
+    stateDropdown.appendChild(option);
+  });
+
+  // Populate the dropdown with states
+  indianStates.forEach(state => {
+    const option = document.createElement('option');
+    option.value = state;
+    option.textContent = state;
+    businessStateDropdown.appendChild(option);
+  });
+
+  options.forEach(option => {
+    option.addEventListener('click', () => {
+      options.forEach(o => o.classList.remove('bg-indigo-500', 'text-white', 'border-indigo-500'));
+      option.classList.add('bg-indigo-500', 'text-white', 'border-indigo-500');
+      hiddenInput.value = option.dataset.value;
+    });
+  });
+
+
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Subcategory{% endblock %}
+
+{% block admin_content %}
+<div class="min-h-screen">
+    <div class="w-full mx-auto">
+        <div class="bg-white rounded-xl shadow-md overflow-hidden p-6 sm:p-8">
+            <div class="text-center mb-8">
+                <h1 class="text-2xl sm:text-3xl font-bold text-gray-800">Edit Subcategory</h1>
+                <p class="mt-2 text-sm text-gray-600">Update the details below for this subcategory</p>
+            </div>
+
+            <!-- Feedback container for success/error messages -->
+            <div id="feedback" class="hidden mb-4 p-4 rounded-md text-sm"></div>
+
+            <div class="mb-4">
+                <a href="{{ url_for('admin_api.get_subcategory_list_page') }}"
+                    class="inline-flex items-center space-x-3 text-indigo-600 hover:text-indigo-800">
+                    <span class="material-symbols-outlined">
+                        keyboard_backspace
+                    </span>
+                    <span>Back to Subcategory</span>
+                </a>
+            </div>
+
+
+            <form id="subcategoryForm" action="/update_sub_category/{{ sub_category.id }}" method="POST"
+                enctype="multipart/form-data" class="space-y-6">
+                <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-8">
+                    <div>
+                        <label for="name" class="block text-base font-medium text-black mb-1">
+                            Subcategory Name <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" id="name" name="name" value="{{ sub_category.name }}"
+                            class="mt-2 block w-full border rounded-md px-5 py-3 focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 ease-in-out placeholder:text-sm"
+                            placeholder="Enter subcategory name" required>
+                    </div>
+                    <div>
+                        <label for="category" class="block text-base font-medium text-black mb-1">
+                            Parent Category <span class="text-red-500">*</span>
+                        </label>
+                        <div class="relative">
+                            <select id="category" name="category"
+                                class="mt-2 block w-full border rounded-md px-5 py-3 focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 ease-in-out placeholder:text-sm appearance-none"
+                                required>
+                                <option value="" disabled class="text-xs">Select a category</option>
+                                {% for cat in categories %}
+                                <option value="{{ cat.id|string }}" {% if cat.id|string==current_category_id
+                                    %}selected{% endif %}>
+                                    {{ cat.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <span
+                                class="material-symbols-outlined absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                                expand_more
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <label for="description" class="block text-base font-medium text-black mb-1">
+                        Description <span class="text-red-500">*</span>
+                    </label>
+                    <textarea id="description" name="description" rows="4"
+                        class="mt-2 block w-full border rounded-md px-5 py-3 focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 ease-in-out placeholder:text-sm"
+                        placeholder="Enter subcategory description" required>{{ sub_category.description }}</textarea>
+                </div>
+
+                <div>
+                    <div class="mb-6">
+                        {% set id = 'sub-category-image' %}
+                        {% set name = 'image' %}
+                        {% set label = 'Sub Category Image' %}
+                        {% set required = false %}
+                        {% set multiple = false %}
+                        {% set accept = '.png,.jpeg,.jpg' %}
+                        {% set help_text = 'PNG, JPG up to 2MB' %}
+                        {% set current_image = sub_category.img_url %}
+                        {% set label_classes = 'block text-base font-medium text-black mb-2' %}
+                        {% set existing_image = sub_category.img_url | default('', true) %}
+                        {% include 'components/image_upload.html' %}
+                    </div>
+                    <p class="mt-1 text-xs text-gray-500">PNG, JPG up to 2MB</p>
+                </div>
+
+                <div class="pt-4 flex justify-end">
+                    <button type="submit"
+                        class="w-48 flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out disabled:bg-gray-400 disabled:cursor-not-allowed disabled:opacity-50"
+                        disabled>
+                        <span id="btn-text" class="btn-text">Update Subcategory</span>
+                        <div id="loading-spinner" class="absolute inset-0 flex items-center justify-center hidden">
+                            <span class="material-symbols-outlined animate-spin text-white text-xl">
+                                progress_activity
+                            </span>
+                        </div>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    const form = document.getElementById('subcategoryForm');
+    const submitButton = document.getElementById('subcategoryForm').querySelector('button[type="submit"]');
+    const loader = document.getElementById('loading-spinner') || document.createElement('div');
+    const btnText = submitButton.querySelector('span') || document.createElement('span');
+
+    if (!loader.id) {
+        loader.id = 'loading-spinner';
+        loader.classList.add('hidden');
+        submitButton.appendChild(loader);
+    }
+    if (!btnText.textContent) {
+        btnText.textContent = submitButton.textContent;
+        submitButton.textContent = '';
+        submitButton.appendChild(btnText);
+    }
+
+    const initialValues = {
+        name: document.getElementById('name').value,
+        description: document.getElementById('description').value,
+        category: document.getElementById('category').value,
+        image: null
+    };
+
+    function hasFormChanged() {
+        const currentName = document.getElementById('name').value;
+        const currentDescription = document.getElementById('description').value;
+        const currentCategory = document.getElementById('category').value;
+        const currentImage = document.getElementById('sub-category-image').files[0];
+
+        return (
+            currentName !== initialValues.name ||
+            currentDescription !== initialValues.description ||
+            currentCategory !== initialValues.category ||
+            (currentImage !== undefined && currentImage !== null)
+        );
+    }
+
+    function updateSubmitButton() {
+        submitButton.disabled = !hasFormChanged();
+    }
+
+    document.getElementById('name').addEventListener('input', updateSubmitButton);
+    document.getElementById('description').addEventListener('input', updateSubmitButton);
+    document.getElementById('category').addEventListener('change', updateSubmitButton);
+    document.getElementById('sub-category-image').addEventListener('change', updateSubmitButton);
+
+    form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        loader.classList.remove('hidden');
+        btnText.classList.add('hidden');
+        submitButton.disabled = true;
+
+        try {
+            const formData = new FormData(this);
+            const response = await Promise.all([
+                sendPostRequest(this.action, formData)
+            ]);
+
+            const result = response[0];
+
+            if (result.success) {
+                showToast(result.message, 'success');
+                setTimeout(() => {
+                    window.location.href = "{{ url_for('admin_api.get_subcategory_list_page') }}";
+                }, 500);
+            } else {
+                const errorMessage = result.errors || result.message || 'Failed to update subcategory';
+                showToast(errorMessage, 'error');
+            }
+        } catch (error) {
+            showToast(error.message || 'An unexpected error occurred', 'error');
+        } finally {
+            loader.classList.add('hidden');
+            btnText.classList.remove('hidden');
+            updateSubmitButton();
+        }
+    });
+
+    updateSubmitButton();
+</script>
+{% endblock %}

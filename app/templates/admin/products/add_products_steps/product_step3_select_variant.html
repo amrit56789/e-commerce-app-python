@@ -1,0 +1,327 @@
+<form action="#" method="POST" id="step-3" class="hidden" enctype="multipart/form-data" id="product-variants-form">
+    <div class="space-y-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b">Product Attributes</h3>
+        <div class="flex justify-between items-center mb-6">
+            <div class="">
+                <label for="brand" class="block text-base font-medium text-black">
+                    Size Type <span class="text-red-500">*</span>
+                </label>
+                <div class="flex space-x-6 mt-2">
+                    <div class="flex items-center">
+                        <input type="radio" id="size_type_standard" name="size_type" value="standard"
+                            class="h-5 w-5 text-blue-600 focus:ring-blue-500 accent-blue-600" checked>
+                        <label for="size_type_standard" class="ml-2 block font-medium text-sm text-gray-700">Standard
+                            Sizes (S, M, L, XL, etc.)</label>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="radio" id="size_type_numeric" name="size_type" value="numeric"
+                            class="h-5 w-6 text-blue-600 focus:ring-blue-500 ccent-blue-600">
+                        <label for="size_type_numeric" class="ml-2 block text-sm font-medium text-gray-700">Numeric
+                            Sizes (28, 30, 32, etc.)</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="size-container"">
+            <!-- Size blocks will be added here -->
+        </div>
+    </div>
+    <div class=" my-4">
+            <button type="button" id="add-size-btn"
+                class="w-fit flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out">
+                + Add Another Size
+            </button>
+        </div>
+</form>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const config = {
+            standardColors: [
+                { name: "White", hex: "#FFFFFF" },
+                { name: "Black", hex: "#000000" },
+                { name: "Red", hex: "#FF0000" },
+                { name: "Green", hex: "#008000" },
+                { name: "Blue", hex: "#0000FF" },
+                { name: "Yellow", hex: "#FFFF00" },
+                { name: "Orange", hex: "#FFA500" },
+                { name: "Purple", hex: "#800080" },
+                { name: "Pink", hex: "#FFC0CB" },
+                { name: "Brown", hex: "#A52A2A" },
+                { name: "Gray", hex: "#808080" },
+                { name: "Cyan", hex: "#00FFFF" },
+                { name: "Magenta", hex: "#FF00FF" },
+                { name: "Lime", hex: "#00FF00" },
+                { name: "Navy", hex: "#000080" },
+                { name: "Teal", hex: "#008080" },
+                { name: "Olive", hex: "#808000" },
+                { name: "Maroon", hex: "#800000" },
+                { name: "Silver", hex: "#C0C0C0" },
+                { name: "Gold", hex: "#FFD700" }
+            ],
+            standardSizes: ['S', 'M', 'L', 'XL', 'XXL', 'XXXL'],
+            numericSizes: [32, 34, 36, 38, 40]
+        };
+
+        const form = document.getElementById('product-variants-form');
+        const sizeContainer = document.getElementById('size-container');
+        const addSizeBtn = document.getElementById('add-size-btn');
+        const sizeTypeStandard = document.getElementById('size_type_standard');
+        const sizeTypeNumeric = document.getElementById('size_type_numeric');
+        let sizeCounter = 0;
+
+        addSizeBlock();
+
+        // Event Listeners
+        addSizeBtn.addEventListener('click', addSizeBlock);
+        sizeTypeStandard.addEventListener('change', updateAllSizeOptions);
+        sizeTypeNumeric.addEventListener('change', updateAllSizeOptions);
+
+        // Functions
+        function addSizeBlock() {
+            const sizeId = `size_${sizeCounter++}`;
+            const isNumeric = sizeTypeNumeric.checked;
+            const sizeOptions = isNumeric ? config.numericSizes : config.standardSizes;
+
+            const sizeBlock = document.createElement('div');
+            sizeBlock.className = 'size-block mb-6 p-4 border border-gray-200 rounded-lg';
+            sizeBlock.dataset.sizeId = sizeId;
+            sizeBlock.innerHTML = `
+            <div class="grid grid-cols-1 sm:grid-cols-3 items-center mb-5 gap-4 p-4">
+                <div class="w-full col-span-2">
+                    <label class="font-medium 3xl:text-xl 3xl:font-semibold">Size <span class="text-red-600">*</span></label>
+                    <div class="relative mt-2">
+                        <select name="sizes[${sizeId}][name]" id="sizes[${sizeId}][name]"
+                            class="size-select cursor-pointer mt-2 block appearance-none w-full border border-gray-300 rounded-md shadow-sm py-2 pl-3 pr-8 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                            <option value="">Select size</option>
+                            ${sizeOptions.map(size => `
+                                <option value="${size}">${size}</option>
+                            `).join('')}
+                            <option value="custom">Custom Size</option>
+                        </select>
+                        <span class="material-symbols-outlined absolute top-1/2 -translate-y-1/2 right-3 text-gray-500 rotate-90 pointer-events-none">
+                            chevron_right
+                        </span>
+                    </div>
+                    <input 
+                        type="text" 
+                        name="sizes[${sizeId}][custom_size]" 
+                        id="sizes[${sizeId}][custom_size]"
+                        placeholder="Enter custom size" 
+                        class="custom-size-input mt-3 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 hidden focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                    >
+                    <p class="size-error mt-1 text-sm font-medium text-red-600 hidden"></p>
+                </div>
+                <div class="flex sm:justify-end">
+                    <button type="button" class="w-fit cursor-pointer font-medium remove-size-btn px-5 py-2 bg-red-100 text-red-600 rounded-md hover:bg-red-200">
+                        Remove
+                    </button>
+                </div>
+            </div>
+            <div class="standard-colors mb-5 p-4">
+                <label class="font-medium 3xl:text-xl 3xl:font-semibold">Standard Colors</label>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-4">
+                    ${config.standardColors.map(color => `
+                        <div class="flex items-center justify-between w-full gap-4">
+                            <div class="flex items-center">
+                                <input type="checkbox" id="${sizeId}_${color.name}" 
+                                    name="sizes[${sizeId}][colors][standard][${color.hex}][enabled]" 
+                                    value="1" class="color-checkbox h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                <label for="${sizeId}_${color.name}" class="ml-3 flex items-center font-medium text-gray-700">
+                                    <span class="w-6 h-6 mr-2 rounded-full border border-gray-300" style="background-color:${color.hex}"></span>
+                                    ${color.name}
+                                </label>
+                                <input type="hidden" name="sizes[${sizeId}][colors][standard][${color.hex}][name]" value="${color.name}">
+                            </div>
+                            <input type="number" name="sizes[${sizeId}][colors][standard][${color.hex}][quantity]" 
+                                value="0" class="quantity-input ml-2 block w-2/3 border border-gray-300 rounded-md shadow-sm py-1 px-3 hidden focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" 
+                                placeholder="Enter quantity" min="0">
+                        </div>
+                    `).join('')}
+                </div>
+                <p class="color-error mt-1 text-sm font-medium text-red-600 hidden"></p>
+            </div>
+            <div class="custom-colors mb-5 px-4">
+                <div class="flex items-center text-center gap-4 mb-4">
+                    <p class="font-medium 3xl:text-xl 3xl:font-semibold pb-2">Custom Colors</p>
+                    <button type="button" class="add-custom-color-btn cursor-pointer">
+                        <span class="material-symbols-outlined text-blue-500">add_circle</span>
+                    </button>
+                </div>
+                <div class="custom-color-container mx-2"></div>
+            </div>
+        `;
+            sizeContainer.appendChild(sizeBlock);
+            setupSizeBlockEvents(sizeBlock);
+            updateRemoveButtons();
+        }
+
+        function setupSizeBlockEvents(sizeBlock) {
+            const sizeSelect = sizeBlock.querySelector('.size-select');
+            const customSizeInput = sizeBlock.querySelector('.custom-size-input');
+            const removeBtn = sizeBlock.querySelector('.remove-size-btn');
+            const addCustomColorBtn = sizeBlock.querySelector('.add-custom-color-btn');
+            const colorCheckboxes = sizeBlock.querySelectorAll('.color-checkbox');
+
+            sizeSelect.addEventListener('change', function () {
+                customSizeInput.classList.toggle('hidden', this.value !== 'custom');
+                validateSizeSelection(sizeBlock);
+            });
+
+            customSizeInput.addEventListener('input', function () {
+                validateSizeSelection(sizeBlock);
+            });
+
+            removeBtn.addEventListener('click', function () {
+                sizeBlock.remove();
+                updateRemoveButtons();
+            });
+
+            addCustomColorBtn.addEventListener('click', function () {
+                addCustomColorField(sizeBlock.querySelector('.custom-color-container'), sizeBlock.dataset.sizeId);
+            });
+
+            colorCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function () {
+                    const quantityInput = this.closest('div').nextElementSibling;
+                    quantityInput.classList.toggle('hidden', !this.checked);
+                });
+            });
+        }
+
+        function validateSizeSelection(currentBlock) {
+            const sizeSelect = currentBlock.querySelector('.size-select');
+            const customSizeInput = currentBlock.querySelector('.custom-size-input');
+            const sizeError = currentBlock.querySelector('.size-error');
+            let currentSize = sizeSelect.value;
+
+            if (currentSize === 'custom') {
+                currentSize = customSizeInput.value.trim();
+            }
+
+            if (!currentSize) {
+                return;
+            }
+
+            const allSizeBlocks = document.querySelectorAll('.size-block');
+            let isDuplicate = false;
+
+            allSizeBlocks.forEach(block => {
+                if (block === currentBlock) return;
+                const otherSelect = block.querySelector('.size-select');
+                const otherCustomInput = block.querySelector('.custom-size-input');
+                let otherSize = otherSelect.value;
+
+                if (otherSize === 'custom') {
+                    otherSize = otherCustomInput.value.trim();
+                }
+
+                if (otherSize && otherSize === currentSize) {
+                    isDuplicate = true;
+                }
+            });
+
+            if (isDuplicate) {
+                sizeError.textContent = `Size "${currentSize}" is already selected.`;
+                sizeError.classList.remove('hidden');
+                sizeSelect.value = '';
+                customSizeInput.value = '';
+                customSizeInput.classList.add('hidden');
+            } else {
+                sizeError.classList.add('hidden');
+            }
+        }
+
+        function addCustomColorField(container, sizeId) {
+            const colorId = `color_${Date.now()}`;
+            const colorField = document.createElement('div');
+            colorField.className = 'flex items-center mb-2 space-x-4 lg:w-2/3';
+            colorField.innerHTML = `
+            <div class="border cursor-pointer border-gray-300 rounded-md shadow-sm py-1 px-3 flex items-center text-center w-1/2">
+                <div class="color-picker-wrapper flex items-center text-center">
+                    <input type="color" name="sizes[${sizeId}][colors][custom][${colorId}][hex]"
+                        value="#000000" class="h-8 w-8 border border-gray-300 rounded-lg">
+                    <span class="hex-value text-sm ml-1">#000000</span>
+                </div>
+                <input type="text" name="sizes[${sizeId}][colors][custom][${colorId}][name]"
+                    placeholder="Color name" class="custom-color-name ml-2 block w-1/2 border-none focus:outline-none">
+            </div>
+            <input type="number" name="sizes[${sizeId}][colors][custom][${colorId}][quantity]"
+                min="0" class="custom-color-quantity block w-1/2 border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Enter Quantity">
+            <button type="button" class="remove-color-btn ml-2">
+                <span class="material-symbols-outlined text-red-600 bg-red-100 rounded-full">cancel</span>
+            </button>
+        `;
+            container.appendChild(colorField);
+            const colorInputDiv = colorField.querySelector('.color-picker-wrapper');
+            const colorInput = colorField.querySelector('input[type="color"]');
+            const hexValue = colorField.querySelector('.hex-value');
+            const removeBtn = colorField.querySelector('.remove-color-btn');
+
+            colorInputDiv.addEventListener('click', () => {
+                if (colorInput) {
+                    colorInput.click();
+                }
+            });
+
+            colorInput.addEventListener('input', () => hexValue.textContent = colorInput.value);
+            removeBtn.addEventListener('click', () => colorField.remove());
+        }
+
+        function updateAllSizeOptions() {
+            document.querySelectorAll('.size-block').forEach(block => {
+                const sizeSelect = block.querySelector('.size-select');
+                const currentValue = sizeSelect.value;
+                const isCustom = sizeSelect.value === 'custom';
+                const customInput = block.querySelector('.custom-size-input');
+                const customValue = isCustom ? customInput.value : null;
+                const sizeOptions = sizeTypeNumeric.checked ? config.numericSizes : config.standardSizes;
+
+                sizeSelect.innerHTML = `
+                <option value="">Select size</option>
+                ${sizeOptions.map(size => `<option value="${size}">${size}</option>`).join('')}
+                <option value="custom">Custom Size</option>
+            `;
+
+                if (isCustom) {
+                    sizeSelect.value = 'custom';
+                    customInput.value = customValue;
+                    customInput.classList.remove('hidden');
+                } else if (sizeOptions.includes(currentValue)) {
+                    sizeSelect.value = currentValue;
+                }
+
+                validateSizeSelection(block);
+            });
+        }
+
+        function updateRemoveButtons() {
+            const removeButtons = document.querySelectorAll('.remove-size-btn');
+            removeButtons.forEach(btn => {
+                btn.style.display = document.querySelectorAll('.size-block').length > 1 ? 'block' : 'none';
+            });
+        }
+
+        function checkColorQuantities(block) {
+            const standardQuantities = Array.from(block.querySelectorAll('.color-checkbox:checked'))
+                .map(checkbox => {
+                    const quantityInput = checkbox.closest('div').nextElementSibling;
+                    return parseInt(quantityInput.value) || 0;
+                });
+            const customQuantities = Array.from(block.querySelectorAll('.custom-color-container input[name*="[quantity]"]'))
+                .map(input => parseInt(input.value) || 0);
+            return [...standardQuantities, ...customQuantities].some(qty => qty > 0);
+        }
+
+        function clearErrors() {
+            document.querySelectorAll('.size-error, .color-error').forEach(el => {
+                el.classList.add('hidden');
+            });
+        }
+
+        function showErrorInBlock(block, className, message) {
+            const errorElement = block.querySelector(`.${className}`);
+            errorElement.textContent = message;
+            errorElement.classList.remove('hidden');
+        }
+    });
+</script>

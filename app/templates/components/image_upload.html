@@ -1,0 +1,228 @@
+{% block Content %}
+<div class="bg-white">
+    <div>
+        <label for="{{ id }}" class="{{ label_classes|default('block text-sm font-medium text-gray-700 mb-2') }}">
+            {{ label }} {% if required %}<span class="text-red-500">*</span>{% endif %}
+        </label>
+
+        <!-- Upload area -->
+        <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md"
+            id="{{ id }}-dropzone">
+            <div class="space-y-1 text-center">
+                <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48"
+                    aria-hidden="true">
+                    <path
+                        d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+                <div class="flex text-sm text-gray-600">
+                    <label for="{{ id }}"
+                        class="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none">
+                        <span>Upload files</span>
+                        <input type="file" name="{{ name }}" id="{{ id }}" {% if multiple %}multiple{% endif %}
+                            accept="{{ accept }}" class="sr-only" onchange="handleImageUpload(this)" onclick="event.stopPropagation()">
+                    </label>
+                    <p class="pl-1">or drag and drop</p>
+                </div>
+                <p class="text-xs text-gray-500">{{ help_text }}</p>
+            </div>
+        </div>
+
+        <!-- Existing image preview -->
+        <div id="{{ id }}-existing-preview" class="mt-4 mb-4">
+            {% if existing_image %}
+            <div class="relative group inline-block">
+                <div class="aspect-square overflow-hidden rounded-lg bg-gray-100 w-32 h-32">
+                    <img src="{{ existing_image }}" alt="Current Brand Logo"
+                        class="w-full h-full object-cover transition-opacity group-hover:opacity-75" id="{{id}}">
+                </div>
+                <button type="button"
+                    class="material-symbols-outlined text-md leading-none absolute -top-1 -right-1 text-white w-8 h-8 flex items-center justify-center transition-colors cursor-pointer bg-red-500 rounded-full"
+                    onclick="removeExistingImage('{{ id }}')">
+                    cancel
+                </button>
+                <input type="hidden" id="{{ id }}-existing-image" name="{{ name }}-existing"
+                    value="{{ existing_image }}">
+            </div>
+            {% endif %}
+        </div>
+
+
+        <!-- New image preview container -->
+        <div id="{{ id }}-preview"
+            class="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 hidden">
+            <!-- Preview images will be inserted here -->
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const dropzone = document.getElementById('{{ id }}-dropzone');
+        const fileInput = document.getElementById('{{ id }}');
+
+        // Add click handler to open file dialog when dropzone is clicked
+        dropzone.addEventListener('click', function(e) {
+            // Only trigger if the click wasn't on a child element that has its own click handler
+            if (e.target === dropzone || !e.target.closest('button, a, input')) {
+                fileInput.click();
+            }
+        });
+
+        // Prevent default drag behaviors
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropzone.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        // Highlight drop zone when item is dragged over it
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropzone.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropzone.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight() {
+            dropzone.classList.add('border-indigo-500');
+            dropzone.classList.remove('border-gray-300');
+        }
+
+        function unhighlight() {
+            dropzone.classList.remove('border-indigo-500');
+            dropzone.classList.add('border-gray-300');
+        }
+
+        // Handle dropped files
+        dropzone.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+
+            if (files.length) {
+                // Create new DataTransfer to update files
+                const dataTransfer = new DataTransfer();
+
+                // Add existing files (if multiple is enabled)
+                if (fileInput.multiple && fileInput.files) {
+                    Array.from(fileInput.files).forEach(file => {
+                        dataTransfer.items.add(file);
+                    });
+                }
+
+                // Add new files
+                Array.from(files).forEach(file => {
+                    dataTransfer.items.add(file);
+                });
+
+                fileInput.files = dataTransfer.files;
+
+                // Trigger the change event
+                const event = new Event('change');
+                fileInput.dispatchEvent(event);
+            }
+        }
+    });
+
+    function handleImageUpload(input) {
+        const previewContainer = document.getElementById(input.id + '-preview');
+        previewContainer.innerHTML = '';
+
+        if (input.files && input.files.length > 0) {
+            previewContainer.classList.remove('hidden');
+            let hasValidFiles = false;
+
+            Array.from(input.files).forEach((file, index) => {
+                const tempInput = document.createElement('input');
+                tempInput.type = 'file';
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+                tempInput.files = dataTransfer.files;
+
+                if (typeof validateImage === 'function' && !validateImage(tempInput)) {
+                    return;
+                }
+
+                hasValidFiles = true;
+
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const previewDiv = document.createElement('div');
+                    previewDiv.className = 'relative group';
+
+                    previewDiv.innerHTML = `
+                        <div class="aspect-square overflow-hidden rounded-lg bg-gray-100">
+                            <img src="${e.target.result}" 
+                                alt="${file.name}" id={{id}}
+                                class="w-full h-full object-cover transition-opacity group-hover:opacity-75">
+                        </div>
+                        <div class="mt-1 flex justify-between text-xs text-gray-500 truncate">
+                            <span>${file.name}</span>
+                            <span>${formatFileSize(file.size)}</span>
+                        </div>
+                        <span class="material-symbols-outlined text-md leading-none absolute -top-1 -right-1 text-white w-8 h-8 flex items-center justify-center transition-colors cursor-pointer" onclick="removeImage(this, '${input.id}', ${index})">cancel</span>
+                    `;
+                    previewContainer.appendChild(previewDiv);
+                };
+                reader.readAsDataURL(file);
+            });
+
+            if (!hasValidFiles) {
+                previewContainer.classList.add('hidden');
+                input.value = '';
+            }
+        } else {
+            previewContainer.classList.add('hidden');
+        }
+    }
+
+    function removeExistingImage(inputId) {
+        const existingPreview = document.getElementById(inputId + '-existing-preview');
+        const existingImageInput = document.getElementById(inputId + '-existing-image');
+
+        const removeField = document.createElement('input');
+        removeField.type = 'hidden';
+        removeField.name = inputId + '-remove';
+        removeField.value = 'true';
+
+        existingPreview.parentNode.insertBefore(removeField, existingPreview.nextSibling);
+
+        existingPreview.innerHTML = '';
+        if (existingImageInput) {
+            existingImageInput.remove();
+        }
+
+        const fileInput = document.getElementById(inputId);
+        if (fileInput) {
+            fileInput.disabled = false;
+        }
+    }
+
+    function removeImage(button, inputId, index) {
+        const input = document.getElementById(inputId);
+        const files = Array.from(input.files);
+        files.splice(index, 1);
+
+        const dataTransfer = new DataTransfer();
+        files.forEach(file => dataTransfer.items.add(file));
+        input.files = dataTransfer.files;
+
+        const event = new Event('change');
+        input.dispatchEvent(event);
+    }
+
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    }
+</script>
+{% endblock %}

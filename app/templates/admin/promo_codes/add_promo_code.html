@@ -1,0 +1,302 @@
+{% extends "base.html" %}
+
+{% block title %}Add Promo Code{% endblock %}
+
+{% block admin_content %}
+<div class="bg-white rounded-lg mx-auto p-6">
+    <div class="text-center mb-8">
+        <h1 class="text-3xl font-bold text-gray-800">Add Promo Code</h1>
+        <p class="mt-2 text-sm text-gray-600">Fill in the details below to add a new promo code</p>
+    </div>
+
+    <form id="addPromoForm" class="space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <label for="code" class="block text-base font-medium text-black mb-1 tracking-wide">Promo Code *</label>
+                <input type="text" id="code" name="code"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="e.g. SUMMER20">
+                <p class="mt-1 text-xs text-gray-500">Unique code customers will enter</p>
+            </div>
+
+            <div>
+                <label class="block text-base font-medium text-black mb-1 tracking-wide">Discount Type</label>
+                <div class="flex space-x-4">
+                    <div class="flex items-center">
+                        <input id="percentage" name="discount_type" type="radio" value="percentage" checked
+                            class="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded-full">
+                        <label for="percentage" class="ml-2 block text-sm text-gray-700">Discount in Percent</label>
+                    </div>
+                    <div class="flex items-center">
+                        <input id="fixed" name="discount_type" type="radio" value="fixed_amount"
+                            class="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded-full">
+                        <label for="fixed" class="ml-2 block text-sm text-gray-700">Discounted Amount</label>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <label for="discount_value" class="block text-base font-medium text-black mb-1 tracking-wide">Discount
+                    Value *</label>
+                <input type="number" id="discount_value" name="discount_value" min="0" step="0.01"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="e.g. 20">
+                <p class="mt-1 text-xs text-gray-500" id="discountHint">Percentage discount (e.g. 20 for 20%)</p>
+            </div>
+
+            <div id="maxDiscountContainer" class="hidden">
+                <label for="max_discount" class="block text-base font-medium text-black mb-1 tracking-wide">Maximum
+                    Discount</label>
+                <input type="number" id="max_discount" name="max_discount" min="0" step="0.01"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Optional">
+                <p class="mt-1 text-xs text-gray-500">Maximum discount amount for percentage discounts</p>
+            </div>
+
+            <div>
+                <label for="min_order_amount" class="block text-base font-medium text-black mb-1 tracking-wide">Minimum
+                    Order Amount *</label>
+                <input type="number" id="min_order_amount" name="min_order_amount" min="0" step="0.01"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Optional">
+                <p class="mt-1 text-xs text-gray-500">Minimum order total to apply this promo</p>
+            </div>
+        </div>
+
+        <div>
+            <label for="description"
+                class="block text-base font-medium text-black mb-1 tracking-wide">Description</label>
+            <div id="editor-container" class="h-40 border border-gray-300 rounded-md"></div>
+            <input type="hidden" id="description" name="description">
+            <p class="mt-1 text-xs text-gray-500">Description that will be shown to customers about this promo</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <label for="start_date" class="block text-base font-medium text-black mb-1 tracking-wide">Start
+                    Date *</label>
+                <input type="date" id="start_date" name="start_date"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+            </div>
+            <div>
+                <label for="end_date" class="block text-base font-medium text-black mb-1 tracking-wide">End Date</label>
+                <input type="date" id="end_date" name="end_date"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                <p class="mt-1 text-xs text-gray-500">Leave empty for no expiration</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <label for="max_uses" class="block text-base font-medium text-black mb-1 tracking-wide">Total Usage
+                    Limit</label>
+                <input type="number" id="max_uses" name="max_uses" min="0"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Optional">
+                <p class="mt-1 text-xs text-gray-500">Leave empty for unlimited uses</p>
+            </div>
+            <div>
+                <label for="user_max_uses" class="block text-base font-medium text-black mb-1 tracking-wide">Uses Per
+                    Customer</label>
+                <input type="number" id="user_max_uses" name="user_max_uses" min="1" value="1"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+            </div>
+        </div>
+
+        <div class="space-y-3">
+            <div class="flex items-center">
+                <input id="is_active" name="is_active" type="checkbox" checked
+                    class="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                <label for="is_active" class="block text-base font-medium text-black ml-2 tracking-wide">Active</label>
+            </div>
+            <div class="flex items-center">
+                <input id="only_first_order" name="only_first_order" type="checkbox"
+                    class="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                <label for="only_first_order" class="ml-2 block text-base font-medium text-black tracking-wide">First
+                    Order Only</label>
+            </div>
+        </div>
+
+        <div class="pt-4 flex justify-end">
+            <button type="submit"
+                class="w-48 flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out">
+                <span class="btn-text">Create Promo Code</span>
+                <div id="loading-spinner" class="hidden">
+                    <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none"
+                        viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                        </circle>
+                        <path class="opacity-75" fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                        </path>
+                    </svg>
+                </div>
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        let quill;
+        try {
+            quill = new Quill('#editor-container', {
+                theme: 'snow',
+                modules: {
+                    toolbar: [
+                        ['bold', 'italic', 'underline', 'strike'],
+                        [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+                        [{ 'list': 'ordered' }, { 'list': 'bullet' }, { 'list': 'check' }],
+                        [{ 'indent': '-1' }, { 'indent': '+1' }],
+                        [{ 'direction': 'rtl' }],
+                        [{ 'script': 'sub' }, { 'script': 'super' }],
+                        [{ 'color': [] }, { 'background': [] }],
+                        [{ 'font': [] }],
+                        [{ 'align': [] }],
+                        ['clean'],
+                        ['link', 'image']
+                    ]
+                },
+                placeholder: 'Enter promo code description...'
+            });
+
+            const descriptionInput = document.getElementById('description');
+            quill.on('text-change', function () {
+                descriptionInput.value = quill.root.innerHTML;
+            });
+        } catch (error) {
+            showToast('Failed to initialize text editor', 'error');
+        }
+
+        const now = new Date();
+        const nowString = now.toISOString().split('T')[0];
+        const startDateField = document.getElementById('start_date');
+        const endDateField = document.getElementById('end_date');
+
+        startDateField.min = nowString;
+        endDateField.min = nowString;
+
+        startDateField.addEventListener('change', function () {
+            if (this.value) {
+                endDateField.min = this.value;
+            }
+        });
+
+        function toggleDiscountFields() {
+            const discountType = document.querySelector('input[name="discount_type"]:checked').value;
+            const maxDiscountContainer = document.getElementById('maxDiscountContainer');
+            const discountHint = document.getElementById('discountHint');
+
+            if (discountType === 'percentage') {
+                maxDiscountContainer.classList.remove('hidden');
+                discountHint.textContent = 'Percentage discount (e.g. 20 for 20%)';
+            } else {
+                maxDiscountContainer.classList.add('hidden');
+                discountHint.textContent = 'Fixed amount discount (e.g. 20 for Rs 20 off)';
+            }
+        }
+
+        function validatePromoForm() {
+            let isValid = true;
+            const form = document.getElementById('addPromoForm');
+            const codeField = form.code;
+            const discountValueField = form.discount_value;
+            const startDateField = form.start_date;
+            const minimum_order_amount = form.min_order_amount;
+            const endDateField = form.end_date;
+
+            isValid &= validators.required(codeField, 'Promo code') && validators.minLength(codeField, 3, 'Promo code');
+            isValid &= validators.required(discountValueField, 'Discount value');
+            isValid &= validators.required(startDateField, 'Start date');
+
+            isValid &= validators.minValue(discountValueField, 0.01, 'Discount value');
+            isValid &= validators.minValue(minimum_order_amount, 1, 'Minimum Order Value');
+
+            const now = new Date();
+            const today = new Date(now.setHours(0, 0, 0, 0));
+            const startDate = new Date(startDateField.value);
+
+            if (startDateField.value && startDate < today) {
+                showErrorMessage(startDateField, 'Start date cannot be in the past');
+                isValid = false;
+            } else {
+                removeErrorMessage(startDateField);
+            }
+            if (endDateField.value) {
+                const endDate = new Date(endDateField.value);
+                if (endDate <= startDate) {
+                    showErrorMessage(endDateField, 'End date must be after start date');
+                    isValid = false;
+                } else {
+                    removeErrorMessage(endDateField);
+                }
+            }
+
+            return Boolean(isValid);
+        }
+
+        const form = document.getElementById('addPromoForm');
+        form.addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            document.getElementById('description').value = quill.root.innerHTML;
+
+            if (!validatePromoForm()) {
+                return;
+            }
+
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const btnText = submitBtn.querySelector('.btn-text');
+            const spinner = submitBtn.querySelector('#loading-spinner');
+
+            btnText.textContent = 'Creating...';
+            spinner.classList.remove('hidden');
+            submitBtn.disabled = true;
+
+            try {
+                const formData = new FormData();
+                formData.append('code', form.code.value.trim().toUpperCase());
+                formData.append('description', form.description.value);
+                formData.append('discount_type', form.discount_type.value);
+                formData.append('discount_value', parseFloat(form.discount_value.value));
+                formData.append('min_order_amount', parseFloat(form.min_order_amount.value) || 0);
+                formData.append('max_discount_amount', parseFloat(form.max_discount.value) || 0);
+                formData.append('start_date', form.start_date.value.split('T')[0]);
+                if (form.end_date.value) {
+                    formData.append('expiry_date', form.end_date.value.split('T')[0]);
+                }
+
+                if (parseInt(form.max_uses.value)) formData.append('max_uses', parseInt(form.max_uses.value));
+                formData.append('uses_per_user', parseInt(form.user_max_uses.value) || 1);
+                formData.append('only_first_order', form.only_first_order.checked);
+                formData.append('is_active', form.is_active.checked);
+
+                const result = await sendPostRequest('/add-promo-code', formData);
+
+                if (result.success) {
+                    showToast('Promo code created successfully!', 'success');
+                    form.reset();
+                    quill.setContents([]);
+                } else {
+                    handleErrors(result.errors || result.message || 'Failed to create promo code', 'error');
+                }
+            } catch (error) {
+                console.error('Submission error:', error);
+                showToast('An error occurred while creating the promo code', 'error');
+            } finally {
+                btnText.textContent = 'Create Promo Code';
+                spinner.classList.add('hidden');
+                submitBtn.disabled = false;
+            }
+        });
+
+        document.querySelectorAll('input[name="discount_type"]').forEach(radio => {
+            radio.addEventListener('change', toggleDiscountFields);
+        });
+
+        toggleDiscountFields();
+    });
+</script>
+{% endblock %}

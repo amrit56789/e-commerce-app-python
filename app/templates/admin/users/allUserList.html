@@ -1,0 +1,287 @@
+{% extends "base.html" %}
+
+{% block title %}All Users{% endblock %}
+
+{% block admin_content %}
+<div class="bg-white rounded-lg shadow-lg p-4 md:p-8">
+  <div class="flex items-center justify-between">
+    <h1 class="text-2xl md:text-3xl font-semibold text-gray-800 mb-4 md:mb-6">All Users</h1>
+    <a href="{{ url_for('admin_api.add_new_user') }}"
+      class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-gray-400 disabled:text-gray-700 text-sm">
+      Add New User
+    </a>
+  </div>
+
+  <div id="loader" class="hidden fixed inset-0 bg-gray-100 bg-opacity-50 flex items-center justify-center z-50">
+    <div class="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+  </div>
+
+  <!-- Search Section -->
+  <div class="mb-6">
+    <div class="flex flex-col sm:flex-row items-end justify-between gap-4">
+      <div class="flex flex-col sm:flex-row gap-3">
+        <div>
+          <label class="block text-sm lg:text-base font-medium text-black mb-1 md:mb-2">Search Users</label>
+          <input type="text" id="search-input" value="{{ filters.search }}" placeholder="Search by name, email, phone"
+            class="block w-52 lg:w-72 px-3 py-2 lg:px-4 md:py-3 border border-gray-300 outline-none rounded-lg shadow-sm text-sm">
+        </div>
+        <div>
+          <label class="block text-sm lg:text-base font-medium text-black mb-1 md:mb-2">Search Role</label>
+          <div class="relative">
+            <select id="role-select"
+              class="block w-52 lg:w-72 px-3 py-2 md:px-4 md:py-3 pr-8 border border-gray-300 rounded-lg shadow-sm text-sm appearance-none">
+              <option value="">All Roles</option>
+              {% for role in roles %}
+              <option value="{{ role.name }}" {% if filters.role==role.name %}selected{% endif %}>{{ role.name }}
+              </option>
+              {% endfor %}
+            </select>
+            <span
+              class="material-symbols-outlined pointer-events-none absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500">
+              expand_more
+            </span>
+          </div>
+        </div>
+      </div>
+      <a href="#" id="clear-search"
+        class="text-sm font-medium px-4 py-3 border border-red-500 rounded-lg text-red-500">Clear Search</a>
+    </div>
+  </div>
+
+  <!-- Table Section -->
+  <div class="overflow-x-auto">
+    <table class="min-w-full divide-y divide-gray-200 shadow-md rounded-lg overflow-hidden" id="user-table">
+      <thead class="bg-gray-50">
+        <tr>
+          {% for header, sort_key in [
+          ('S.No', 'index'),
+          ('First Name', 'first_name'),
+          ('Last Name', 'last_name'),
+          ('Email', 'email'),
+          ('Role', 'role'),
+          ('Phone Number', 'phone_number'),
+          ('Status', 'status'),
+          ('Action', None)
+          ] %}
+          <th class="px-4 py-4 text-xs font-semibold text-gray-500 text-center uppercase tracking-wide border border-gray-200
+            {% if sort_key %}cursor-pointer hover:bg-gray-100{% endif %}" {% if sort_key
+            %}data-sort-key="{{ sort_key }}" {% endif %}>
+            <div class="flex items-center justify-center">
+              {{ header }}
+              {% if sort_key %}
+              <span class="ml-1 sort-icon
+                {% if filters.sort_by == sort_key %}
+                  {% if filters.sort_order == 'asc' %}sort-asc{% else %}sort-desc{% endif %}
+                {% endif %}">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7l4-4m0 0l4 4m-4-4v18" />
+                </svg>
+              </span>
+              {% endif %}
+            </div>
+          </th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody id="user-table-body" class="divide-y divide-gray-200"></tbody>
+    </table>
+  </div>
+
+  <!-- Pagination Section -->
+  <div class="flex flex-col sm:flex-row items-center justify-between mt-6 gap-3">
+    <div class="flex items-center gap-2">
+      <span class="text-sm text-gray-600">Items per page:</span>
+      <div class="relative">
+        <select id="items-per-page"
+          class="border border-gray-300 w-24 rounded-lg px-2 py-1 md:px-3 md:py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 pr-8 appearance-none">
+          {% for amount in [10, 20, 50, 100] %}
+          <option value="{{ amount }}" {% if pagination.per_page==amount %}selected{% endif %}>{{ amount }}</option>
+          {% endfor %}
+        </select>
+        <span
+          class="material-symbols-outlined pointer-events-none absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 text-center">
+          expand_more
+        </span>
+      </div>
+    </div>
+    <div class="flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-start" id="pagination"></div>
+  </div>
+</div>
+
+<style>
+  .sort-icon {
+    opacity: 0.3;
+  }
+
+  .sort-icon.sort-asc {
+    opacity: 1;
+    transform: rotate(0deg);
+  }
+
+  .sort-icon.sort-desc {
+    opacity: 1;
+    transform: rotate(180deg);
+  }
+
+  th:hover .sort-icon {
+    opacity: 0.6;
+  }
+</style>
+{% endblock %}
+
+{% block js %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const elements = {
+      searchInput: document.getElementById('search-input'),
+      roleSelect: document.getElementById('role-select'),
+      clearSearch: document.getElementById('clear-search'),
+      itemsPerPage: document.getElementById('items-per-page'),
+      userTableBody: document.getElementById('user-table-body'),
+      pagination: document.getElementById('pagination'),
+      pageInfo: document.getElementById('page-info'),
+      loader: document.getElementById('loader')
+    };
+    let currentPage = {{ pagination.page | tojson | safe
+  }};
+  let sortBy = '{{ filters.sort_by | default('') }}';
+  let sortOrder = '{{ filters.sort_order | default('asc') }}';
+
+  const statusStyles = {
+    activated: 'bg-green-100 text-green-800',
+    deactivated: 'bg-red-100 text-red-800',
+    hold: 'bg-yellow-100 text-yellow-800'
+  };
+
+  const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+
+  const debounce = (func, wait) => {
+    let timeout;
+    return (...args) => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => func.apply(this, args), wait);
+    };
+  };
+
+  const renderTableRow = (user) => `
+      <tr class="border-t even:bg-gray-50 odd:bg-white hover:bg-gray-100">
+        <td class="px-3 py-3 md:px-6 md:py-4 text-center text-sm border border-gray-200">${user.index}</td>
+        <td class="px-3 py-3 md:px-6 md:py-4 text-center text-sm border border-gray-200">${user.first_name}</td>
+        <td class="px-3 py-3 md:px-6 md:py-4 text-center text-sm border border-gray-200">${user.last_name}</td>
+        <td class="px-3 py-3 md:px-6 md:py-4 text-center text-sm border border-gray-200">${user.email}</td>
+        <td class="px-3 py-3 md:px-6 md:py-4 text-center text-sm border border-gray-200">${user.role}</td>
+        <td class="px-3 py-3 md:px-6 md:py-4 text-center text-sm border border-gray-200">${user.phone_number}</td>
+        <td class="px-3 py-3 md:px-6 md:py-4 text-center text-sm border border-gray-200">
+          <span class="inline-block px-2 py-1 rounded ${statusStyles[user.status.toLowerCase()] || 'bg-gray-100 text-gray-800'}">
+            ${capitalize(user.status)}
+          </span>
+        </td>
+        <td class="px-3 py-3 md:px-6 md:py-4 text-center text-sm border border-gray-200">
+          <a href="/users/edit/${user.id}" class="text-indigo-600 hover:text-indigo-900 inline-flex items-center">
+            <span class="material-symbols-outlined text-xl">edit_square</span>
+          </a>
+        </td>
+      </tr>`;
+
+  const updatePagination = (pagination) => {
+    elements.pagination.innerHTML = `
+        ${pagination.has_prev
+        ? `<a href="#" class="px-3 py-1 md:px-4 md:py-2 border text-sm rounded-lg hover:bg-gray-100 transition user-pagination-link" data-page="${pagination.prev_num}">Previous</a>`
+        : `<span class="px-3 py-1 md:px-4 md:py-2 border rounded-lg text-sm text-gray-400 cursor-not-allowed">Previous</span>`}
+        <span class="px-3 py-1 md:px-4 md:py-2 text-sm" id="page-info">Page ${pagination.page} of ${pagination.pages}</span>
+        ${pagination.has_next
+        ? `<a href="#" class="px-3 py-1 md:px-4 md:py-2 border text-sm rounded-lg hover:bg-gray-100 transition user-pagination-link" data-page="${pagination.next_num}">Next</a>`
+        : `<span class="px-3 py-1 md:px-4 md:py-2 border rounded-lg text-sm text-gray-400 cursor-not-allowed">Next</span>`}
+      `;
+    attachPaginationListeners();
+  };
+
+  const attachPaginationListeners = () => {
+    document.querySelectorAll('.user-pagination-link').forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        fetchUsers(link.dataset.page);
+      });
+    });
+  };
+
+  const fetchUsers = async (page = 1) => {
+    elements.loader.classList.remove('hidden');
+    const params = new URLSearchParams({
+      page,
+      search: elements.searchInput.value.trim(),
+      role: elements.roleSelect.value,
+      limit: elements.itemsPerPage.value,
+      sort_by: sortBy,
+      sort_order: sortOrder
+    });
+
+    try {
+      const data = await fetchJsonData(`/api/users?${params.toString()}`);
+      elements.userTableBody.innerHTML = data.users.map(renderTableRow).join('');
+      updatePagination(data.pagination);
+      currentPage = data.pagination.page;
+      updateSortIcons();
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      showToast(`Failed to fetch users: ${error.message}`, 'error');
+      if (error.message.includes('404') && page !== 1) {
+        fetchUsers(1);
+      }
+    } finally {
+      elements.loader.classList.add('hidden');
+    }
+  };
+
+  const updateSortIcons = () => {
+    document.querySelectorAll('th[data-sort-key]').forEach(th => {
+      const icon = th.querySelector('.sort-icon');
+      if (th.dataset.sortKey === sortBy) {
+        icon.classList.add(sortOrder === 'asc' ? 'sort-asc' : 'sort-desc');
+        icon.classList.remove(sortOrder === 'asc' ? 'sort-desc' : 'sort-asc');
+      } else {
+        icon.classList.remove('sort-asc', 'sort-desc');
+      }
+    });
+  };
+
+const handleSort = (sortKey) => {
+    // Toggle sort order if clicking the same column
+    if (sortBy === sortKey) {
+        sortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
+    } 
+    // Set new sort column and default to ascending
+    else {
+        sortBy = sortKey;
+        sortOrder = 'asc';
+    }
+    
+    console.log(`Sorting by: ${sortBy}, order: ${sortOrder}`);  // Debug log
+    fetchUsers(1);  // Always reset to page 1 when changing sort
+};
+
+// Make sure this event listener is properly set up
+document.querySelectorAll('th[data-sort-key]').forEach(th => {
+    th.addEventListener('click', (e) => {
+        e.preventDefault();
+        handleSort(th.dataset.sortKey);
+    });
+});
+
+  const debouncedFetchUsers = debounce(() => fetchUsers(1), 300);
+  elements.searchInput.addEventListener('input', debouncedFetchUsers);
+  elements.roleSelect.addEventListener('change', () => fetchUsers(1));
+  elements.itemsPerPage.addEventListener('change', () => fetchUsers(1));
+  elements.clearSearch.addEventListener('click', (e) => {
+    e.preventDefault();
+    elements.searchInput.value = '';
+    elements.roleSelect.value = '';
+    sortBy = '';
+    sortOrder = 'asc';
+    fetchUsers(1);
+  });
+
+  fetchUsers(currentPage);
+  });
+</script>
+{% endblock %}

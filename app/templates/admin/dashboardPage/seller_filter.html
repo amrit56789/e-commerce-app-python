@@ -1,0 +1,13 @@
+{% if users.is_admin %}
+<div class="mb-8">
+  <label for="seller-filter" class="block text-base font-medium text-black mb-1 tracking-wide">Filter by Seller</label>
+  <div class="relative max-w-xs">
+    <input type="text" id="seller-filter" autocomplete="off"
+      class="w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 rounded-md transition duration-150"
+      placeholder="Search sellers..." aria-label="Search sellers">
+    <div id="seller-suggestions"
+      class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg hidden max-h-60 overflow-auto">
+    </div>
+  </div>
+</div>
+{% endif %}

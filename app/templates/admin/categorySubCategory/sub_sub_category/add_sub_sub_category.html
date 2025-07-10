@@ -1,0 +1,269 @@
+{% extends "base.html" %}
+
+{% block title %}Add Sub-Sub Category{% endblock %}
+
+{% block admin_content %}
+<div class="min-h-screen">
+    <div class="w-full mx-auto">
+        <div class="bg-white rounded-xl shadow-md overflow-hidden p-6 sm:p-8">
+            <div class="text-center mb-8">
+                <h1 class="text-2xl sm:text-3xl font-bold text-black">Add New Sub-Sub Category</h1>
+                <p class="mt-2 text-sm text-gray-600">Fill in the details below to create a new sub-sub category.</p>
+            </div>
+            <form id="subSubCategoryForm" method="POST"
+                action="{{ url_for('sub_sub_category_bp.add_sub_sub_category') }}" enctype="multipart/form-data">
+                <div class="mb-6 grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <!-- Category Autocomplete -->
+                    <div>
+                        <label for="category" class="block text-base font-medium text-black mb-1 tracking-wide">
+                            Category <span class="text-red-500">*</span>
+                        </label>
+                        <div class="relative">
+                            <input type="text" id="category" name="category" autocomplete="off"
+                                class="block w-full border rounded-md px-5 py-3 focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 ease-in-out placeholder:text-sm"
+                                placeholder="Search category...">
+                            <input type="hidden" id="category_id" name="category_id">
+                            <div id="category-results"
+                                class="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto hidden">
+                                <!-- Results will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Subcategory Autocomplete -->
+                    <div>
+                        <label for="subcategory" class="block text-base font-medium text-black mb-1 tracking-wide">
+                            Subcategory <span class="text-red-500">*</span>
+                        </label>
+                        <div class="relative">
+                            <input type="text" id="subcategory" name="subcategory" autocomplete="off"
+                                class="block w-full border rounded-md px-5 py-3 focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 ease-in-out placeholder:text-sm"
+                                placeholder="Search subcategory..." disabled>
+                            <input type="hidden" id="subcategory_id" name="subcategory_id">
+                            <div id="subcategory-results"
+                                class="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto hidden">
+                                <!-- Results will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rest of your form remains the same -->
+                <!-- Product Type Name -->
+                <div class="mb-6">
+                    <label for="name" class="block text-base font-medium text-black mb-1 tracking-wide">Subcategory Name
+                        <span class="text-red-500">*</span></label>
+                    <input type="text" id="name" name="name"
+                        class="block w-full border rounded-md px-5 py-3 focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 ease-in-out placeholder:text-sm"
+                        placeholder="Enter subcategory type name">
+                </div>
+
+                <!-- Product Type Description -->
+                <div class="mb-6">
+                    <label for="description"
+                        class="block text-base font-medium text-black mb-1 tracking-wide">Subcategory Description
+                        <span class="text-red-500">*</span></label>
+                    <textarea id="description" name="description"
+                        class="block w-full border rounded-md px-5 py-3 focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 ease-in-out placeholder:text-sm"
+                        placeholder="Enter subcategory type description"></textarea>
+                </div>
+
+                <!-- Product Type Image -->
+                <div class="mb-6">
+                    <div class="mb-6">
+                        {% set id = 'sub-sub-category-image' %}
+                        {% set name = 'sub-sub-category-image' %}
+                        {% set label = 'Sub-Sub Category Image' %}
+                        {% set required = true %}
+                        {% set multiple = false %}
+                        {% set accept = '.png,.jpeg,.jpg' %}
+                        {% set help_text = 'PNG, JPG up to 2MB' %}
+                        {% set label_classes = 'block text-base font-medium text-black mb-1 tracking-wide' %}
+                        {% include 'components/image_upload.html' %}
+                    </div>
+                    <p class="mt-1 text-xs text-gray-500">PNG, JPG, GIF up to 2MB</p>
+                </div>
+
+                <div class="pt-4 flex justify-end">
+                    <button type="submit"
+                        class="w-48 flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out">
+                        <span id="btn-text" class="btn-text">Add Sub-Sub Category</span>
+                        <div id="loading-spinner" class="hidden">
+                            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg"
+                                fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                    stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                </path>
+                            </svg>
+                        </div>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+    function debounce(func, wait) {
+        let timeout;
+        return function (...args) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), wait);
+        };
+    }
+
+    const categoryInput = document.getElementById('category');
+    const categoryIdInput = document.getElementById('category_id');
+    const categoryResults = document.getElementById('category-results');
+    const subcategoryInput = document.getElementById('subcategory');
+    const subcategoryIdInput = document.getElementById('subcategory_id');
+    const subcategoryResults = document.getElementById('subcategory-results');
+
+    categoryInput.addEventListener('input', debounce(async function (e) {
+        const query = e.target.value.trim();
+
+        if (query.length < 2) {
+            categoryResults.classList.add('hidden');
+            return;
+        }
+
+        const result = await sendGetRequest(`/api/categories/search?q=${encodeURIComponent(query)}`);
+
+
+        if (result.success && result.data && result.data.length > 0) {
+            categoryResults.innerHTML = result.data.map(cat =>
+                `<div class="cursor-default select-none relative py-2 pl-3 pr-9 hover:bg-indigo-600 hover:text-white" 
+                  data-id="${cat.id}" data-value="${cat.name}">
+                ${cat.name}
+            </div>`
+            ).join('');
+            categoryResults.classList.remove('hidden');
+        } else {
+            categoryResults.innerHTML = '<div class="px-4 py-2 text-gray-500">No categories found</div>';
+            categoryResults.classList.remove('hidden');
+        }
+    }, 300));
+
+    categoryResults.addEventListener('click', function (e) {
+        const item = e.target.closest('div[data-id]');
+        if (item) {
+            categoryInput.value = item.dataset.value;
+            categoryIdInput.value = item.dataset.id;
+            categoryResults.classList.add('hidden');
+
+            subcategoryInput.disabled = false;
+            subcategoryInput.value = '';
+            subcategoryIdInput.value = '';
+            subcategoryResults.classList.add('hidden');
+        }
+    });
+
+    subcategoryInput.addEventListener('input', debounce(async function (e) {
+        const query = e.target.value.trim();
+        const categoryId = categoryIdInput.value;
+
+        if (!categoryId || query.length < 2) {
+            subcategoryResults.classList.add('hidden');
+            return;
+        }
+
+        const result = await sendGetRequest(`/api/sub-categories/search?category_id=${categoryId}&q=${encodeURIComponent(query)}`);
+
+        if (result.success && result.data && result.data.data.length > 0) {
+            subcategoryResults.innerHTML = result.data.data.map(sub =>
+                `<div class="cursor-default select-none relative py-2 pl-3 pr-9 hover:bg-indigo-600 hover:text-white" 
+                data-id="${sub.id}" data-value="${sub.name}">
+                ${sub.name}
+            </div>`
+            ).join('');
+            subcategoryResults.classList.remove('hidden');
+        } else {
+            subcategoryResults.innerHTML = '<div class="px-4 py-2 text-gray-500">No subcategories found</div>';
+            subcategoryResults.classList.remove('hidden');
+        }
+    }, 300));
+
+
+    subcategoryResults.addEventListener('click', function (e) {
+        const item = e.target.closest('div[data-id]');
+        if (item) {
+            subcategoryInput.value = item.dataset.value;
+            subcategoryIdInput.value = item.dataset.id;
+            subcategoryResults.classList.add('hidden');
+        }
+    });
+
+    document.addEventListener('click', function (e) {
+        if (!categoryInput.contains(e.target) && !categoryResults.contains(e.target)) {
+            categoryResults.classList.add('hidden');
+        }
+        if (!subcategoryInput.contains(e.target) && !subcategoryResults.contains(e.target)) {
+            subcategoryResults.classList.add('hidden');
+        }
+    });
+
+    document.getElementById('subSubCategoryForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        document.getElementById('loading-spinner').classList.remove('hidden');
+        document.getElementById('btn-text').classList.add('hidden');
+
+        const formData = new FormData(this);
+        const fields = {
+            category_id: categoryIdInput,
+            subcategory_id: subcategoryIdInput,
+            name: document.getElementById('name'),
+            description: document.getElementById('description'),
+            'sub-sub-category-image': document.getElementById('sub-sub-category-image')
+        };
+
+        const isValid = Object.keys(fields).every(field => {
+            const isRequiredValid = validators.required(fields[field], field.replace(/-|_/, ' ').replace(/\b\w/g, l => l.toUpperCase()));
+
+            if (!isRequiredValid) {
+                return false;
+            }
+
+            let isMinLengthValid = true;
+            if (field !== 'sub-sub-category-image' && field !== 'category_id' && field !== 'subcategory_id') {
+                if (field === 'description') {
+                    isMinLengthValid = validators.minLength(fields[field], 10, field.replace(/-|_/, ' ').replace(/\b\w/g, l => l.toUpperCase()));
+                } else {
+                    isMinLengthValid = validators.minLength(fields[field], 3, field.replace(/-|_/, ' ').replace(/\b\w/g, l => l.toUpperCase()));
+                }
+            }
+
+            return isMinLengthValid;
+        });
+
+        const isValidImage = validateImage(fields['sub-sub-category-image']);
+
+        if (!isValid || !isValidImage) {
+            document.getElementById('loading-spinner').classList.add('hidden');
+            document.getElementById('btn-text').classList.remove('hidden');
+            return;
+        }
+
+        try {
+            const response = await sendPostRequest('/api/sub-sub-category/add', formData);
+            if (response.success) {
+                showToast(response.message, 'success');
+                setTimeout(() => {
+                    window.location.href = "{{ url_for('admin_api.sub_sub_category_list_page') }}";
+                }, 500)
+            } else {
+                handleErrors(response.errors || response.message || 'An error occurred', 'error');
+            }
+        } catch (error) {
+            showToast(error.message || 'An error occurred', 'error');
+        } finally {
+            document.getElementById('loading-spinner').classList.add('hidden');
+            document.getElementById('btn-text').classList.remove('hidden');
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Sub-Sub Category{% endblock %}
+
+{% block admin_content %}
+<div class="min-h-screen">
+    <div class="w-full mx-auto">
+        <div class="bg-white rounded-xl shadow-md overflow-hidden p-6 sm:p-8">
+            <div class="text-center mb-8">
+                <h1 class="text-2xl sm:text-3xl font-bold text-black">Edit Sub-Sub Category</h1>
+                <p class="mt-2 text-sm text-gray-600">Update the details below for this sub-sub category.</p>
+            </div>
+            <form id="subSubCategoryForm" method="POST"
+                action="{{ url_for('admin_api.update_sub_sub_category', sub_sub_category_id=sub_sub_category.id) }}"
+                enctype="multipart/form-data">
+                <div class="mb-6 grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div>
+                        <label for="category" class="block text-base font-medium text-black mb-1 tracking-wide">
+                            Category
+                        </label>
+                        <input type="text" id="category" name="category"
+                            class="block w-full border rounded-md px-5 py-3 bg-gray-100 cursor-not-allowed"
+                            value="{{ sub_sub_category.category_id.name }}" readonly>
+                        <input type="hidden" id="category_id" name="category_id"
+                            value="{{ sub_sub_category.category_id.id }}">
+                    </div>
+
+                    <div>
+                        <label for="subcategory" class="block text-base font-medium text-black mb-1 tracking-wide">
+                            Subcategory
+                        </label>
+                        <input type="text" id="subcategory" name="subcategory"
+                            class="block w-full border rounded-md px-5 py-3 bg-gray-100 cursor-not-allowed"
+                            value="{{ sub_sub_category.sub_category_id.name }}" readonly>
+                        <input type="hidden" id="subcategory_id" name="subcategory_id"
+                            value="{{ sub_sub_category.sub_category_id.id }}">
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <label for="name" class="block text-base font-medium text-black mb-1 tracking-wide">Product Type
+                        Name <span class="text-red-500">*</span></label>
+                    <input type="text" id="name" name="name" value="{{ sub_sub_category.name }}"
+                        class="block w-full border rounded-md px-5 py-3 focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 ease-in-out placeholder:text-sm"
+                        placeholder="Enter product type name">
+                </div>
+
+                <div class="mb-6">
+                    <label for="description" class="block text-base font-medium text-black mb-1 tracking-wide">Product
+                        Type Description</label>
+                    <input type="hidden" name="description" id="description" value="{{ sub_sub_category.description | safe }}">
+                    <div id="editor-container" class="h-48">{{ sub_sub_category.description | safe }}</div>
+                </div>
+
+                <div class="mb-6">
+                    <div class="mb-6">
+                        {% set id = 'sub-sub-category-image' %}
+                        {% set name = 'sub-sub-category-image' %}
+                        {% set label = 'Sub-Sub Category Image' %}
+                        {% set required = true %}
+                        {% set multiple = false %}
+                        {% set accept = '.png,.jpeg,.jpg' %}
+                        {% set help_text = 'PNG, JPG up to 2MB' %}
+                        {% set label_classes = 'block text-base font-medium text-black mb-1 tracking-wide' %}
+                        {% set existing_image = sub_sub_category.img_url | default('', true) %}
+                        {% include 'components/image_upload.html' %}
+                    </div>
+                    <p class="mt-1 text-xs text-gray-500">PNG, JPG, GIF up to 2MB</p>
+                </div>
+
+                <div class="pt-4 flex justify-end">
+                    <button type="submit" id="submitBtn" disabled
+                        class="w-52 flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gray-400 cursor-not-allowed transition duration-150 ease-in-out">
+                        <span id="btn-text" class="btn-text">Update Sub-Sub Category</span>
+                        <div id="loading-spinner" class="hidden">
+                            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg"
+                                fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                    stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                </path>
+                            </svg>
+                        </div>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    let quill;
+    let originalValues = {};
+
+    document.addEventListener('DOMContentLoaded', function () {
+        try {
+            quill = new Quill('#editor-container', {
+                theme: 'snow',
+                modules: {
+                    toolbar: [
+                        ['bold', 'italic', 'underline', 'strike'],
+                        [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+                        [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                        [{ 'indent': '-1' }, { 'indent': '+1' }],
+                        [{ 'color': [] }, { 'background': [] }],
+                        [{ 'align': [] }],
+                        ['clean'],
+                        ['link']
+                    ]
+                },
+                placeholder: 'Enter brand description...'
+            });
+
+            const descriptionInput = document.getElementById('description');
+            quill.root.innerHTML = descriptionInput.value || '';
+            
+            originalValues = {
+                name: document.getElementById('name').value,
+                description: quill.root.innerHTML,
+                imageChanged: false
+            };
+
+            quill.on('text-change', function () {
+                descriptionInput.value = quill.root.innerHTML;
+                checkForChanges();
+            });
+        } catch (error) {
+            console.error('Failed to initialize text editor:', error);
+            showToast('Failed to initialize text editor', 'error');
+        }
+
+        const form = document.getElementById('subSubCategoryForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const nameInput = document.getElementById('name');
+        const descriptionInput = document.getElementById('description');
+        const imageInput = document.getElementById('sub-sub-category-image');
+        const btnText = document.getElementById('btn-text');
+        const loadingSpinner = document.getElementById('loading-spinner');
+
+        function checkForChanges() {
+            if (!quill) return;
+            
+            const currentValues = {
+                name: nameInput.value,
+                description: quill.root.innerHTML,
+                imageChanged: imageInput.files.length > 0
+            };
+
+            const normalizeHTML = (html) => {
+                if (!html) return '';
+                return html.replace(/\s+/g, ' ').trim();
+            };
+
+            const hasChanges =
+                currentValues.name !== originalValues.name ||
+                normalizeHTML(currentValues.description) !== normalizeHTML(originalValues.description) ||
+                currentValues.imageChanged;
+
+            updateButtonState(hasChanges);
+        }
+
+        function updateButtonState(enable) {
+            submitBtn.disabled = !enable;
+            if (enable) {
+                submitBtn.classList.remove('bg-gray-400', 'cursor-not-allowed');
+                submitBtn.classList.add('bg-indigo-600', 'hover:bg-indigo-700');
+            } else {
+                submitBtn.classList.add('bg-gray-400', 'cursor-not-allowed');
+                submitBtn.classList.remove('bg-indigo-600', 'hover:bg-indigo-700');
+            }
+        }
+
+        nameInput.addEventListener('input', checkForChanges);
+        imageInput.addEventListener('change', checkForChanges);
+
+        form.addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const isNameValid = validators.required(nameInput, 'Name');
+            const isDescriptionValid = validators.required(descriptionInput, 'Description');
+
+            if (!isNameValid || !isDescriptionValid) {
+                return;
+            }
+
+            const formData = new FormData(form);
+
+            btnText.textContent = '';
+            loadingSpinner.classList.remove('hidden');
+            submitBtn.disabled = true;
+
+            try {
+                const result = await sendPostRequest(form.action, formData);
+
+                if (result.success) {
+                    originalValues = {
+                        name: nameInput.value,
+                        description: quill.root.innerHTML,
+                        imageChanged: false
+                    };
+                    showToast(result.message);
+                } else {
+                    throw new Error(result.message || result.errors || 'Failed to update');
+                }
+            } catch (error) {
+                handleErrors('Error: ' + error.message);
+            } finally {
+                btnText.textContent = 'Update Sub-Sub Category';
+                loadingSpinner.classList.add('hidden');
+                checkForChanges();
+            }
+        });
+
+        checkForChanges();
+    });
+</script>
+{% endblock %}

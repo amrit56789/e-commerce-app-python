@@ -1,0 +1,101 @@
+<div id="notificationDropdown"
+    class="hidden absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl overflow-hidden z-50 border border-gray-100 transform transition-all duration-200 ease-out origin-top-right opacity-0 scale-95">
+    <!-- Dropdown header -->
+    <div class="px-4 py-3 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
+        <h3 class="text-sm font-semibold text-gray-800">Notifications</h3>
+        <div class="flex items-center space-x-2">
+            <button class="text-xs font-medium text-indigo-600 hover:text-indigo-800 transition-colors">
+                Mark all as read
+            </button>
+            <button class="text-gray-400 hover:text-gray-600 transition-colors">
+                <i class="bi bi-gear text-sm"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Notification items -->
+    <div class="max-h-96 overflow-y-auto divide-y divide-gray-100">
+        <!-- Unread notification (highlighted) -->
+        <a href="#" class="block px-4 py-3 hover:bg-gray-50 bg-indigo-50/50 transition-colors group">
+            <div class="flex items-start">
+                <div class="flex-shrink-0 mt-0.5">
+                    <div class="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center">
+                        <i class="bi bi-chat-square-text text-indigo-600"></i>
+                    </div>
+                </div>
+                <div class="ml-3 flex-1">
+                    <p class="text-sm font-medium text-gray-900 group-hover:text-indigo-600 transition-colors">
+                        New message from Sarah
+                    </p>
+                    <p class="text-xs text-gray-500 mt-1 truncate">
+                        "Hey, just wanted to follow up on our meeting..."
+                    </p>
+                    <div class="flex items-center mt-1.5">
+                        <span class="inline-block w-2 h-2 rounded-full bg-indigo-500"></span>
+                        <span class="ml-2 text-xs text-gray-500">2 min ago</span>
+                    </div>
+                </div>
+            </div>
+        </a>
+
+        <!-- Regular notification -->
+        <a href="#" class="block px-4 py-3 hover:bg-gray-50 transition-colors group">
+            <div class="flex items-start">
+                <div class="flex-shrink-0 mt-0.5">
+                    <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                        <i class="bi bi-arrow-repeat text-blue-600"></i>
+                    </div>
+                </div>
+                <div class="ml-3 flex-1">
+                    <p class="text-sm font-medium text-gray-900 group-hover:text-indigo-600 transition-colors">
+                        System update completed
+                    </p>
+                    <p class="text-xs text-gray-500 mt-1">
+                        Version 2.3.0 has been successfully installed
+                    </p>
+                    <div class="mt-1.5 text-xs text-gray-500">1 hour ago</div>
+                </div>
+            </div>
+        </a>
+
+        <!-- Notification with action buttons -->
+        <div class="px-4 py-3 hover:bg-gray-50 transition-colors group">
+            <div class="flex items-start">
+                <div class="flex-shrink-0 mt-0.5">
+                    <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                        <i class="bi bi-check-circle text-green-600"></i>
+                    </div>
+                </div>
+                <div class="ml-3 flex-1">
+                    <p class="text-sm font-medium text-gray-900 group-hover:text-indigo-600 transition-colors">
+                        Project approved
+                    </p>
+                    <p class="text-xs text-gray-500 mt-1">
+                        Your "Dashboard Redesign" proposal has been approved
+                    </p>
+                    <div class="flex items-center justify-between mt-2">
+                        <span class="text-xs text-gray-500">3 hours ago</span>
+                        <div class="flex space-x-2">
+                            <button
+                                class="text-xs px-2 py-1 rounded bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-colors">
+                                View
+                            </button>
+                            <button
+                                class="text-xs px-2 py-1 rounded bg-gray-50 text-gray-600 hover:bg-gray-100 transition-colors">
+                                Dismiss
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dropdown footer -->
+    <div class="px-4 py-2.5 border-t border-gray-100 bg-gray-50">
+        <a href="#"
+            class="block text-center text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors">
+            View all notifications
+        </a>
+    </div>
+</div>

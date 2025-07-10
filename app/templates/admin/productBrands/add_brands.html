@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block title %}Add New Brand{% endblock %}
+
+{% block admin_content %}
+<div class="bg-white rounded-lg mx-auto p-6">
+    <div class="text-center mb-8">
+        <h1 class="text-3xl font-bold text-gray-800">Add New Brand</h1>
+        <p class="mt-2 text-sm text-gray-600">Fill in the details below to add a new brand</p>
+    </div>
+
+    <form id="addBrandForm" method="POST" action="{{ url_for('brand_bp.add_new_brand') }}"
+        enctype="multipart/form-data">
+        <!-- Brand Name Field -->
+        <div class="mb-4">
+            <label for="name" class="block text-base font-medium text-black mb-1 tracking-wide">Brand Name <span
+                    class="text-red-500">*</span></label>
+            <input type="text" name="name" id="name"
+                class="block w-full border rounded-md px-5 py-3 focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 ease-in-out">
+        </div>
+
+        <!-- Description Field -->
+        <div class="mb-4">
+            <label for="description"
+                class="block text-base font-medium text-black mb-1 tracking-wide">Description</label>
+            <input type="hidden" name="description" id="description">
+            <div id="editor-container" class="h-48"></div>
+        </div>
+
+        <!-- Brand Logo Field -->
+        <div class="bg-white">
+            {% set id = 'brand-logo' %}
+            {% set name = 'images' %}
+            {% set label = 'Upload Brand Logo' %}
+            {% set required = true %}
+            {% set multiple = false %}
+            {% set accept = '.png,.jpeg,.jpg,.webp,.avif' %}
+            {% set help_text = 'PNG, JPG, JPEG up to 2MB' %}
+            {% set label_classes = 'block text-base font-medium text-black mb-1 tracking-widea' %}
+            {% include 'components/image_upload.html' %}
+        </div>
+
+        <!-- Submit Button -->
+        <div class="pt-4 flex justify-end">
+            <button type="submit"
+                class="w-48 flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out">
+                <span id="brand-add-button-text" class="btn-text"> Add Brand </span>
+                <div id="loading-spinner" class="hidden">
+                    <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none"
+                        viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                        </circle>
+                        <path class="opacity-75" fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                        </path>
+                    </svg>
+                </div>
+            </button>
+        </div>
+    </form>
+
+    <div id="responseMessage" class="text-center mt-4 text-sm"></div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+    let quill;
+    document.addEventListener('DOMContentLoaded', function() {
+        try {
+            quill = new Quill('#editor-container', {
+                theme: 'snow',
+                modules: {
+                    toolbar: [
+                        ['bold', 'italic', 'underline', 'strike'],
+                        [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+                        [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                        [{ 'indent': '-1' }, { 'indent': '+1' }],
+                        [{ 'color': [] }, { 'background': [] }],
+                        [{ 'align': [] }],
+                        ['clean'],
+                        ['link']
+                    ]
+                },
+                placeholder: 'Enter brand description...'
+            });
+
+            const descriptionInput = document.getElementById('description');
+            quill.on('text-change', function() {
+                descriptionInput.value = quill.root.innerHTML;
+            });
+        } catch (error) {
+            console.error('Failed to initialize text editor:', error);
+            showToast('Failed to initialize text editor', 'error');
+        }
+    });
+
+    document.getElementById('addBrandForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        // Update the hidden input with the latest Quill content
+        document.getElementById('description').value = quill.root.innerHTML;
+
+        const loader = document.getElementById('loading-spinner');
+        const btnText = document.getElementById('brand-add-button-text');
+        const responseMessage = document.getElementById('responseMessage');
+
+        responseMessage.textContent = '';
+        responseMessage.className = 'text-center mt-4 text-sm';
+
+        const nameField = document.getElementById('name');
+        const descriptionField = document.getElementById('description');
+        const logoField = document.getElementById('brand-logo');
+
+        const isValid =
+            validators.required(nameField, 'Brand Name') &&
+            validators.required(descriptionField, 'Description') &&
+            validators.required(logoField, 'Brand Logo') &&
+            validators.minLength(nameField, 3, 'Brand Name') &&
+            validators.minLength(descriptionField, 10, 'Description');
+
+        if (!isValid) return;
+
+        const isImageValid = validateImage(logoField);
+
+        if (!isImageValid) {
+            return;
+        }
+
+        loader.classList.remove('hidden');
+        btnText.classList.add('hidden');
+
+        const formData = new FormData();
+        formData.append('name', nameField.value.trim());
+        formData.append('description', descriptionField.value.trim());
+
+        if (logoField.files.length > 0) {
+            formData.append('logo', logoField.files[0]);
+        }
+
+        try {
+            const result = await sendPostRequest("{{ url_for('brand_bp.add_new_brand') }}", formData);
+            if (result.success) {
+                nameField.value = '';
+                quill.root.innerHTML = '';
+                logoField.value = '';
+                showToast(result.message, 'success');
+                setTimeout(() => {
+                    window.location.href = "{{ url_for('admin_api.get_brand_list_page') }}";
+                }, 500)
+            } else {
+                responseMessage.textContent = result.errors || result.message || 'An error occurred';
+                responseMessage.classList.add('text-red-500');
+                showToast(result.errors || result.message || 'An error occurred', 'error');
+            }
+
+        } catch (error) {
+            responseMessage.textContent = error.message || 'An error occurred';
+            responseMessage.classList.add('text-red-500');
+            showToast(error.message || 'An error occurred', 'error');
+        } finally {
+            loader.classList.add('hidden');
+            btnText.classList.remove('hidden');
+        }
+    });
+</script>
+{% endblock %}

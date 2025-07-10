@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+
+{% block title %}Edit User{% endblock %}
+
+{% block admin_content %}
+<div class="bg-white rounded-lg mx-auto p-6">
+  <!-- Toast Container -->
+  <div id="toast-container" class="fixed top-4 right-4 z-50"></div>
+
+  <div class="text-center mb-8">
+    <h1 class="text-3xl font-bold text-gray-800">Edit User</h1>
+    <p class="mt-2 text-sm text-gray-600">Update the details below for this user.</p>
+  </div>
+
+  <div class="mb-4">
+    <a href="{{ url_for('admin_api.all_users') }}"
+      class="inline-flex items-center space-x-3 text-indigo-600 hover:text-indigo-800">
+      <span class="material-symbols-outlined">
+        keyboard_backspace
+      </span>
+      <span>Back to All User List</span>
+    </a>
+  </div>
+
+  <form id="editUserForm" action="{{ url_for('admin_api.edit_user', user_id=user.id) }}" method="POST">
+    <input type="hidden" name="user_id" value="{{ user.id }}">
+
+    <!-- Name Fields Row -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+      <!-- First Name Field -->
+      <div>
+        <label for="first_name" class="block text-base font-medium text-gray-700">First Name <span
+            class="text-red-500">*</span></label>
+        <input type="text" name="first_name" id="first_name" value="{{ user.first_name }}"
+          class="mt-2 block w-full border rounded-md px-5 py-3 focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 ease-in-out border-gray-300">
+        <div class="error-message text-red-500 text-sm mt-1" id="first_name-error"></div>
+      </div>
+
+      <!-- Last Name Field -->
+      <div>
+        <label for="last_name" class="block text-base font-medium text-gray-700">Last Name</label>
+        <input type="text" name="last_name" id="last_name" value="{{ user.last_name or '' }}"
+          class="mt-2 block w-full border rounded-md px-5 py-3 focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 ease-in-out border-gray-300">
+        <div class="error-message text-red-500 text-sm mt-1" id="last_name-error"></div>
+      </div>
+    </div>
+
+    <!-- Contact Fields Row -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+      <!-- Email Field -->
+      <div>
+        <label for="email" class="block text-base font-medium text-gray-700">Email <span
+            class="text-red-500">*</span></label>
+        <input type="email" name="email" id="email" value="{{ user.email }}"
+          class="mt-2 block w-full border rounded-md px-5 py-3 focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 ease-in-out border-gray-300"
+          maxlength="100">
+        <div class="error-message text-red-500 text-sm mt-1" id="email-error"></div>
+      </div>
+
+      <!-- Phone Number Field -->
+      <div>
+        <label for="phone_number" class="block text-base font-medium text-gray-700">Phone Number</label>
+        <input type="tel" name="phone_number" id="phone_number" value="{{ user.phone_number or '' }}"
+          class="mt-2 block w-full border rounded-md px-5 py-3 focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 ease-in-out border-gray-300"
+          pattern="[0-9]{10,15}" placeholder="1234567890">
+        <div class="error-message text-red-500 text-sm mt-1" id="phone_number-error"></div>
+      </div>
+    </div>
+
+    <!-- Status Field -->
+    <div class="mb-6">
+      <label for="status" class="block text-base font-medium text-gray-700">Status <span
+          class="text-red-500">*</span></label>
+      <div class="relative">
+        <select name="status" id="status"
+          class="mt-2 block appearance-none w-full border rounded-md px-5 py-3 focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 ease-in-out border-gray-300">
+          <option value="activated" {% if user.status=='activated' %}selected{% endif %}>Activated</option>
+          <option value="deactivated" {% if user.status=='deactivated' %}selected{% endif %}>Deactivated</option>
+          <option value="hold" {% if user.status=='hold' %}selected{% endif %}>Hold</option>
+        </select>
+        <span
+          class="material-symbols-outlined pointer-events-none absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500">
+          expand_more
+        </span>
+      </div>
+    </div>
+
+    <!-- Submit Button -->
+    <div class="pt-4 flex justify-end">
+      <button type="submit" id="submitButton"
+        class="w-48 flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gray-400 cursor-not-allowed hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 transition duration-150 ease-in-out disabled:bg-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
+        disabled>
+        <span class="btn-text">Update User</span>
+        <svg id="loading-spinner" class="hidden animate-spin h-5 w-5 ml-2 text-white" xmlns="http://www.w3.org/2000/svg"
+          fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+          </path>
+        </svg>
+      </button>
+    </div>
+  </form>
+</div>
+
+<script>
+  const initialValues = {
+    first_name: document.getElementById('first_name').value,
+    last_name: document.getElementById('last_name').value,
+    email: document.getElementById('email').value,
+    phone_number: document.getElementById('phone_number').value,
+    status: document.getElementById('status').value
+  };
+
+  function hasFormChanged() {
+    const currentValues = {
+      first_name: document.getElementById('first_name').value,
+      last_name: document.getElementById('last_name').value,
+      email: document.getElementById('email').value,
+      phone_number: document.getElementById('phone_number').value,
+      status: document.getElementById('status').value
+    };
+
+    return Object.keys(initialValues).some(key => initialValues[key] !== currentValues[key]);
+  }
+
+  function updateButtonState() {
+    const submitButton = document.getElementById('submitButton');
+    if (hasFormChanged()) {
+      submitButton.disabled = false;
+      submitButton.classList.remove('bg-gray-400', 'hover:bg-gray-400', 'focus:ring-gray-400', 'disabled:bg-gray-400');
+      submitButton.classList.add('bg-indigo-600', 'hover:bg-indigo-700', 'focus:ring-indigo-500');
+    } else {
+      submitButton.disabled = true;
+      submitButton.classList.remove('bg-indigo-600', 'hover:bg-indigo-700', 'focus:ring-indigo-500');
+      submitButton.classList.add('bg-gray-400', 'hover:bg-gray-400', 'focus:ring-gray-400', 'disabled:bg-gray-400');
+    }
+  }
+
+  const inputs = document.querySelectorAll('#editUserForm input, #editUserForm select');
+  inputs.forEach(input => {
+    input.addEventListener('input', updateButtonState);
+    input.addEventListener('change', updateButtonState);
+  });
+
+  document.getElementById('editUserForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    const firstName = document.querySelector('#first_name');
+    const email = document.querySelector('#email');
+    const status = document.querySelector('#status');
+
+    const isValid =
+      validators.required(firstName, 'First Name') &&
+      validators.minLength(firstName, 2, 'First Name') &&
+      validators.required(email, 'Email') &&
+      validators.email(email, 'Email') &&
+      validators.required(status, 'Status');
+
+    if (!isValid) return;
+
+    const form = e.target;
+    const submitButton = form.querySelector('#submitButton');
+    const buttonText = submitButton.querySelector('.btn-text');
+    const spinner = submitButton.querySelector('#loading-spinner');
+
+    buttonText.textContent = '';
+    spinner.classList.remove('hidden');
+    submitButton.disabled = true;
+    submitButton.classList.add('disabled:bg-gray-400');
+
+    try {
+      const formData = new FormData(form);
+      const result = await sendPostRequest(form.action, formData);
+
+      if (result.success) {
+        showToast(result.message, 'success');
+        setTimeout(() => {
+          window.location.href = '/all-users-list';
+        }, 1000);
+      } else {
+        let errorMessage = result.message || 'Failed to update user';
+        if (result.errors) {
+          if (typeof result.errors === 'string') {
+            errorMessage = result.errors;
+          } else {
+            Object.entries(result.errors).forEach(([field, error]) => {
+              const errorElement = document.getElementById(`${field}-error`);
+              if (errorElement) {
+                errorElement.textContent = error;
+              } else {
+                errorMessage = Object.values(result.errors).join(', ');
+              }
+            });
+            if (errorMessage === result.message) {
+              showToast(errorMessage, 'error');
+            }
+          }
+        } else {
+          showToast(errorMessage, 'error');
+        }
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      showToast('An unexpected error occurred', 'error');
+    } finally {
+      buttonText.textContent = 'Update User';
+      spinner.classList.add('hidden');
+      updateButtonState();
+    }
+  });
+</script>
+{% endblock %}

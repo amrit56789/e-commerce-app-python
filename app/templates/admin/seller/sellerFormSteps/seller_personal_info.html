@@ -1,0 +1,119 @@
+<div class="step" id="personalInfoStep">
+    <h2 class="text-xl font-medium text-gray-900 border-b pb-2 mb-4">Personal Information</h2>
+
+    <!-- Personal Information Section -->
+    <div class="personal-info-section space-y-4">
+        <!-- Grid Layout for Personal Info Fields -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-8">
+            <!-- First Name -->
+            <div>
+                <label for="first_name" class="block text-base font-medium text-gray-700 mb-1">First Name <span
+                        class="text-red-500">*</span></label>
+                <input type="text" id="first_name" name="first_name" autocomplete="off"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition duration-200">
+            </div>
+
+            <!-- Last Name -->
+            <div>
+                <label for="last_name" class="block text-base font-medium text-gray-700 mb-1">Last Name <span
+                        class="text-red-500">*</span></label>
+                <input type="text" id="last_name" name="last_name" autocomplete="off"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition duration-200">
+            </div>
+
+            <!-- Email -->
+            <div>
+                <label for="email" class="block text-base font-medium text-gray-700 mb-1">Email <span
+                        class="text-red-500">*</span></label>
+                <input type="email" id="email" name="email" autocomplete="off"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition duration-200">
+            </div>
+
+            <!-- Phone Number -->
+            <div>
+                <label for="phone_number" class="block text-base font-medium text-gray-700 mb-1">Phone <span
+                        class="text-red-500">*</span></label>
+                <input type="tel" id="phone_number" name="phone_number" autocomplete="off"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition duration-200">
+            </div>
+        </div>
+    </div>
+
+    <hr class="my-6">
+
+    <!-- Address Information Section -->
+    <div class="address-info-section space-y-4">
+        <h3 class="text-xl font-medium text-gray-900 mb-4">Address Details</h3>
+
+        <!-- Grid Layout for Address Fields -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-8">
+            <!-- Street Line 1 -->
+            <div>
+                <label for="street_line1" class="block text-base font-medium text-gray-700 mb-1">Street Line 1 <span
+                        class="text-red-500">*</span></label>
+                <input type="text" id="street_line1" name="street_line1" autocomplete="off"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition duration-200">
+            </div>
+
+            <!-- Street Line 2 -->
+            <div>
+                <label for="street_line2" class="block text-base font-medium text-gray-700 mb-1">Street Line 2</label>
+                <input type="text" id="street_line2" name="street_line2" autocomplete="off"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition duration-200">
+            </div>
+
+            <!-- City -->
+            <div>
+                <label for="city" class="block text-base font-medium text-gray-700 mb-1">City <span
+                        class="text-red-500">*</span></label>
+                <input type="text" id="city" name="city" autocomplete="off"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition duration-200">
+            </div>
+
+            <!-- State -->
+            <div id="stateContainer">
+                <label for="state" class="block text-base font-medium text-gray-700 mb-1">
+                    State <span class="text-red-500">*</span>
+                </label>
+                <div class="relative">
+                    <select id="state" name="state" autocomplete="off"
+                        class="w-full px-4 py-2 pr-10 border border-gray-300 appearance-none rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition duration-200">
+                        <option value="">Select a state</option>
+                    </select>
+                    <span
+                        class="material-symbols-outlined pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                        keyboard_arrow_down
+                    </span>
+                </div>
+            </div>
+
+            <!-- Pincode -->
+            <div>
+                <label for="postal_code" class="block text-base font-medium text-gray-700 mb-1">Pincode <span
+                        class="text-red-500">*</span></label>
+                <input type="text" id="postal_code" name="postal_code" autocomplete="off"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition duration-200">
+            </div>
+
+            <!-- Country -->
+            <div>
+                <label for="country" class="block text-base font-medium text-gray-700 mb-1">Country <span
+                        class="text-red-500">*</span></label>
+                <div class="relative">
+                    <select id="country" name="country" autocomplete="off"
+                        class="w-full px-4 py-2 pr-10 border border-gray-300 appearance-none rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition duration-200">
+                        <option value="India" selected>India</option>
+                    </select>
+                    <span
+                        class="material-symbols-outlined pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                        keyboard_arrow_down
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+   
+</script>

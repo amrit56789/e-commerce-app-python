@@ -1,0 +1,8 @@
+venv
+.env
+node_m
+.DS_Store
+uploads
+__pycache__
+serviceAccountKey.json
+product_images

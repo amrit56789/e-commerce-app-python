@@ -1,0 +1,27 @@
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
+  <!-- Sales Chart -->
+  <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 lg:col-span-2">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-lg font-semibold text-gray-900">Sales Performance</h2>
+      <div class="flex space-x-2" role="group" aria-label="Chart period selection">
+        <button id="chart-monthly"
+          class="px-3 py-1 text-xs font-medium rounded-md bg-primary-100 text-primary-800">Monthly</button>
+        <button id="chart-weekly"
+          class="px-3 py-1 text-xs font-medium rounded-md text-gray-500 hover:bg-gray-50">Weekly</button>
+        <button id="chart-daily"
+          class="px-3 py-1 text-xs font-medium rounded-md text-gray-500 hover:bg-gray-50">Daily</button>
+      </div>
+    </div>
+    <div class="relative w-full h-80">
+      <canvas id="salesChart" class="w-full h-full" aria-label="Sales performance chart" role="img"></canvas>
+    </div>
+  </div>
+
+  <!-- Top Products -->
+  <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+    <h2 class="text-lg font-semibold text-gray-900 mb-4">Top Products</h2>
+    <div id="top-products" class="space-y-4" aria-live="polite">
+      <p class="text-sm text-gray-500">Loading top products...</p>
+    </div>
+  </div>
+</div>

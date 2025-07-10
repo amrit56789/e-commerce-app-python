@@ -1,0 +1,656 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Seller{% endblock %}
+
+{% block admin_content %}
+<div class="overflow-hidden">
+  <div class="w-full mx-auto">
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden p-6 md:p-8">
+      <div class="text-center mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">Edit Seller</h1>
+        <p class="mt-2 text-sm text-gray-600">Fill in the seller details below to edit a seller account</p>
+      </div>
+      <div class="flex flex-col gap-6">
+        <!-- Personal Info Details Start  -->
+        <div>
+          <h2 class="text-xl font-medium text-gray-900 border-b pb-2 mb-4">Personal Information</h2>
+
+          <!-- Personal Information Section -->
+          <div class="personal-info-section space-y-4">
+            <!-- Grid Layout for Personal Info Fields -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-8">
+              <!-- First Name -->
+              <div>
+                <label for="first_name" class="block text-base font-medium text-gray-700 mb-1">First Name <span
+                    class="text-red-500">*</span></label>
+                <input type="text" id="first_name" name="first_name" autocomplete="off"
+                  value="{{ seller_data.user.first_name }}"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition duration-200">
+              </div>
+
+              <!-- Last Name -->
+              <div>
+                <label for="last_name" class="block text-base font-medium text-gray-700 mb-1">Last Name <span
+                    class="text-red-500">*</span></label>
+                <input type="text" id="last_name" name="last_name" autocomplete="off"
+                  value="{{ seller_data.user.last_name }}"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition duration-200">
+              </div>
+
+              <!-- Email -->
+              <div>
+                <label for="email" class="block text-base font-medium text-gray-700 mb-1">Email <span
+                    class="text-red-500">*</span></label>
+                <input type="email" id="email" name="email" autocomplete="off" value="{{ seller_data.user.email }}"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition duration-200">
+              </div>
+
+              <!-- Phone Number -->
+              <div>
+                <label for="phone_number" class="block text-base font-medium text-gray-700 mb-1">Phone <span
+                    class="text-red-500">*</span></label>
+                <input type="tel" id="phone_number" name="phone_number" autocomplete="off"
+                  value="{{ seller_data.user.phone_number }}"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition duration-200">
+              </div>
+            </div>
+          </div>
+
+          <hr class="my-6">
+
+          <!-- Address Information Section -->
+          <div class="address-info-section space-y-4">
+            <h3 class="text-xl font-medium text-gray-900 mb-4">Address Details</h3>
+
+            <!-- Grid Layout for Address Fields -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-8">
+              <!-- Street Line 1 -->
+              <div>
+                <label for="street_line1" class="block text-base font-medium text-gray-700 mb-1">Street Line 1 <span
+                    class="text-red-500">*</span></label>
+                <input type="text" id="street_line1" name="street_line1" autocomplete="off"
+                  value="{{ seller_data.address.line1 }}"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition duration-200">
+              </div>
+
+              <!-- Street Line 2 -->
+              <div>
+                <label for="street_line2" class="block text-base font-medium text-gray-700 mb-1">Street Line 2</label>
+                <input type="text" id="street_line2" name="street_line2" autocomplete="off"
+                  value="{{ seller_data.address.line2 }}"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition duration-200">
+              </div>
+
+              <!-- City -->
+              <div>
+                <label for="city" class="block text-base font-medium text-gray-700 mb-1">City <span
+                    class="text-red-500">*</span></label>
+                <input type="text" id="city" name="city" autocomplete="off" value="{{ seller_data.address.city }}"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition duration-200">
+              </div>
+
+              <!-- State -->
+              <div id="stateContainer">
+                <label for="state" class="block text-base font-medium text-gray-700 mb-1">
+                  State <span class="text-red-500">*</span>
+                </label>
+                <div class="relative">
+                  <select id="state" name="state" autocomplete="off"
+                    class="w-full px-4 py-2 pr-10 border border-gray-300 appearance-none rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition duration-200">
+                    <option value="">Select a state</option>
+                  </select>
+                  <span
+                    class="material-symbols-outlined pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                    keyboard_arrow_down
+                  </span>
+                </div>
+              </div>
+
+              <!-- Pincode -->
+              <div>
+                <label for="postal_code" class="block text-base font-medium text-gray-700 mb-1">Pincode <span
+                    class="text-red-500">*</span></label>
+                <input type="text" id="postal_code" name="postal_code" autocomplete="off"
+                  value="{{ seller_data.address.postal_code }}"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition duration-200">
+              </div>
+
+              <!-- Country -->
+              <div>
+                <label for="country" class="block text-base font-medium text-gray-700 mb-1">Country <span
+                    class="text-red-500">*</span></label>
+                <div class="relative">
+                  <select id="country" name="country" autocomplete="off"
+                    class="w-full px-4 py-2 pr-10 border border-gray-300 appearance-none rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition duration-200">
+                    <option value="India" selected>India</option>
+                  </select>
+                  <span
+                    class="material-symbols-outlined pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                    keyboard_arrow_down
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Personal Info Details End  -->
+
+        <!-- Bussiness_info Details Start -->
+        <div>
+          <h2 class="text-xl font-medium text-gray-900 border-b pb-2 mb-4">Business Information</h2>
+
+          <!-- Business Basic Information Section -->
+          <div class="Business-info-section space-y-4">
+            <!-- Grid Layout for Business Info Fields -->
+            <div class="grid grid-cols-1 sm:grid-cols-1 gap-8">
+              <!-- Business Name -->
+              <div>
+                <label for="business_name" class="block text-base font-medium text-gray-700 mb-1">Business Name <span
+                    class="text-red-500">*</span></label>
+                <input type="text" id="business_name" name="business_name" autocomplete="off"
+                  value="{{ seller_data.seller.businessName }}"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition duration-200">
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-8">
+              <!-- Business Type -->
+              <div class="relative">
+                <label for="business_type" class="block text-base font-medium text-gray-700 mb-1">Business Type <span
+                    class="text-red-500">*</span></label>
+                <div class="relative">
+                  <select id="business_type" name="business_type" required
+                    class="appearance-none text-sm w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition duration-200">
+                    <option value="" disabled selected>Select business type</option>
+                    <option value="sole_proprietorship">Sole Proprietorship</option>
+                    <option value="partnership">Partnership</option>
+                    <option value="llc">Limited Liability Company (LLC)</option>
+                    <option value="corporation">Corporation</option>
+                    <option value="non_profit">Non-Profit Organization</option>
+                    <option value="cooperative">Cooperative</option>
+                    <option value="other">Other</option>
+                  </select>
+                  <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <label for="business_email" class="block text-base font-medium text-gray-700 mb-1"> Business Email <span
+                    class="text-red-500">*</span></label>
+                <input type="text" id="business_email" name="business_email" autocomplete="off"
+                  value="{{ seller_data.seller.businessEmail }}"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition duration-200">
+              </div>
+
+              <div>
+                <label for="business_mobile_number" class="block text-base font-medium text-gray-700 mb-1"> Business
+                  Mobile
+                  Number <span class="text-red-500">*</span></label>
+                <input type="text" id="business_mobile_number" name="business_mobile_number" autocomplete="off"
+                  value="{{ seller_data.seller.businessMobile }}"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition duration-200">
+              </div>
+
+              <div>
+                <label for="gst_number" class="block text-base font-medium text-gray-700 mb-1"> GST Number <span
+                    class="text-red-500">*</span></label>
+                <input type="text" id="gst_number" name="gst_number" autocomplete="off"
+                  value="{{ seller_data.seller.gst_number }}"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition duration-200">
+              </div>
+            </div>
+          </div>
+
+          <hr class="my-6">
+
+          <!-- Business Address Information Section -->
+          <div class="space-y-4">
+            <h3 class="text-xl font-medium text-gray-900 mb-4">Business Address Details</h3>
+
+            <!-- Business Address Type -->
+            <div id="business_address_type_container">
+              <label class="block text-base font-medium text-gray-700 mb-2">
+                Business Address Type <span class="text-red-500">*</span>
+              </label>
+              <div class="flex flex-wrap gap-3 justify-start" id="business-type-options">
+                <div
+                  class="option px-6 py-2 rounded-full border border-gray-300 text-gray-700 cursor-pointer transition"
+                  data-value="Office">Office</div>
+                <div
+                  class="option px-6 py-2 rounded-full border border-gray-300 text-gray-700 cursor-pointer transition"
+                  data-value="Home">Home</div>
+                <div
+                  class="option px-6 py-2 rounded-full border border-gray-300 text-gray-700 cursor-pointer transition"
+                  data-value="Work">Work</div>
+                <div
+                  class="option px-6 py-2 rounded-full border border-gray-300 text-gray-700 cursor-pointer transition"
+                  data-value="Store">Store</div>
+                <div
+                  class="option px-6 py-2 rounded-full border border-gray-300 text-gray-700 cursor-pointer transition"
+                  data-value="Business">Business</div>
+                <div
+                  class="option px-6 py-2 rounded-full border border-gray-300 text-gray-700 cursor-pointer transition"
+                  data-value="Other">Other</div>
+              </div>
+
+              <!-- Hidden actual radio input to store selected value -->
+              <input type="hidden" name="business_address_type" id="business_address_type_input">
+            </div>
+
+            <!-- Business Address Type -->
+
+            <!-- Grid Layout for Address Fields -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-8">
+              <!-- Street Line 1 -->
+              <div>
+                <label for="business_street_line1" class="block text-base font-medium text-gray-700 mb-1">Street Line 1
+                  <span class="text-red-500">*</span></label>
+                <input type="text" id="business_street_line1" name="business_street_line1" autocomplete="off"
+                  value="{{ seller_data.business_address.line1 }}"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition duration-200">
+              </div>
+
+              <!-- Street Line 2 -->
+              <div>
+                <label for="business_street_line2" class="block text-base font-medium text-gray-700 mb-1">Street Line
+                  2</label>
+                <input type="text" id="business_street_line2" name="business_street_line2" autocomplete="off"
+                  value="{{ seller_data.business_address.line2 }}"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition duration-200">
+              </div>
+
+              <!-- City -->
+              <div>
+                <label for="business_city" class="block text-base font-medium text-gray-700 mb-1">City <span
+                    class="text-red-500">*</span></label>
+                <input type="text" id="business_city" name="business_city" autocomplete="off"
+                  value="{{ seller_data.business_address.city }}"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition duration-200">
+              </div>
+
+              <!-- State -->
+              <div id="businessStateContainer">
+                <label for="business_state" class="block text-base font-medium text-gray-700 mb-1">
+                  State <span class="text-red-500">*</span>
+                </label>
+                <div class="relative">
+                  <select id="business_state" name="business_state" autocomplete="off"
+                    class="w-full px-4 py-2 pr-10 border border-gray-300 appearance-none rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition duration-200">
+                    <option value="">Select a state</option>
+                  </select>
+                  <span
+                    class="material-symbols-outlined pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                    keyboard_arrow_down
+                  </span>
+                </div>
+              </div>
+
+              <!-- Pincode -->
+              <div>
+                <label for="business_pincode" class="block text-base font-medium text-gray-700 mb-1">Pincode <span
+                    class="text-red-500">*</span></label>
+                <input type="text" id="business_pincode" name="business_pincode" autocomplete="off"
+                  value="{{ seller_data.business_address.postal_code }}"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition duration-200">
+              </div>
+
+              <!-- Country -->
+              <div>
+                <label for="business_country" class="block text-base font-medium text-gray-700 mb-1">Country <span
+                    class="text-red-500">*</span></label>
+                <div class="relative">
+                  <select id="business_country" name="business_country" autocomplete="off"
+                    class="w-full px-4 py-2 pr-10 border border-gray-300 appearance-none rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition duration-200">
+                    <option value="India" selected>India</option>
+                  </select>
+                  <span
+                    class="material-symbols-outlined pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                    keyboard_arrow_down
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Business info end -->
+
+        <!-- Business Document start -->
+        <div class="step" id="business_document_info">
+          <h2 class="text-xl font-semibold text-gray-900 border-b pb-3 mb-6">Business Details</h2>
+
+          <div class="space-y-6">
+            <!-- PAN Card Number -->
+            <div>
+              <label for="pan_card_number" class="block text-base font-medium text-gray-700 mb-2">PAN Card Number <span
+                  class="text-red-500">*</span></label>
+              <input type="text" id="pan_card_number" name="pan_card_number" autocomplete="off"
+                value="{{ seller_data.identification.pan_number }}"
+                class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+            </div>
+
+            <!-- Upload PAN Card Front -->
+            <div class="mb-4">
+              <div class="bg-white">
+                {% set id = 'pan_card_front' %}
+                {% set name = 'pan_card_front' %}
+                {% set label = 'PAN Card Front Side' %}
+                {% set required = true %}
+                {% set multiple = false %}
+                {% set accept = '.png,.jpeg,.jpg,.webp,.avif' %}
+                {% set help_text = 'PNG, JPG, JPEG up to 2MB' %}
+                {% set label_classes = 'block text-base font-medium text-gray-700 mb-2' %}
+                {% set existing_image = seller_data.identification.pan_card_front %}
+                {% include 'components/image_upload.html' %}
+              </div>
+            </div>
+
+            <!-- Address Proof ID Type -->
+            <div>
+              <label for="address_proof_id_type" class="block text-base font-medium text-gray-700 mb-2">Select Address
+                Proof ID Type <span class="text-red-500">*</span></label>
+              <select id="address_proof_id_type" name="address_proof_id_type" required
+                class="appearance-none w-full px-4 py-2.5 pr-10 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                <option value="" disabled selected>Select address proof</option>
+                <option value="aadhaar_card">Aadhaar Card</option>
+                <option value="voter_id">Voter ID</option>
+                <option value="passport">Passport</option>
+                <option value="driving_license">Driving License</option>
+                <option value="ration_card">Ration Card</option>
+                <option value="utility_bill">Utility Bill</option>
+              </select>
+            </div>
+
+            <!-- ID Number -->
+            <div>
+              <label for="id_number" class="block text-base font-medium text-gray-700 mb-2">ID Number <span
+                  class="text-red-500">*</span></label>
+              <input type="text" id="id_number" name="id_number" autocomplete="off"
+                value="{{ seller_data.identification.id_number }}"
+                class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+            </div>
+
+            <!-- Upload ID Front -->
+            <div class="mb-4">
+              <div class="bg-white">
+                {% set id = 'address_proof_front' %}
+                {% set name = 'address_proof_front' %}
+                {% set label = 'ID Front Side' %}
+                {% set required = true %}
+                {% set multiple = false %}
+                {% set accept = '.png,.jpeg,.jpg,.webp,.avif' %}
+                {% set help_text = 'PNG, JPG, JPEG up to 2MB' %}
+                {% set label_classes = 'block text-base font-medium text-gray-700 mb-2' %}
+                {% set existing_image = seller_data.identification.address_proof_front if seller_data.identification
+                else None %}
+                {% include 'components/image_upload.html' %}
+              </div>
+            </div>
+
+            <!-- Upload ID Back -->
+            <div class="mb-4">
+              <div class="bg-white">
+                {% set id = 'address_proof_back' %}
+                {% set name = 'address_proof_back' %}
+                {% set label = 'ID Back Side (if applicable)' %}
+                {% set required = false %}
+                {% set multiple = false %}
+                {% set accept = '.png,.jpeg,.jpg,.webp,.avif' %}
+                {% set help_text = 'PNG, JPG, JPEG up to 2MB' %}
+                {% set label_classes = 'block text-base font-medium text-gray-700 mb-2' %}
+                {% set existing_image = seller_data.identification.address_proof_back if seller_data.identification else
+                None %}
+                {% include 'components/image_upload.html' %}
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Business Document End  -->
+      </div>
+      <div class="" id="">
+        <h2 class="text-xl font-semibold text-gray-900 border-b pb-3 mb-6">Status</h2>
+        <div class="relative">
+          <select id="seller_status" name="seller_status" autocomplete="off"
+            class="w-full px-4 py-2 pr-10 border border-gray-300 appearance-none rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition duration-200">
+            <option value=""></option>
+          </select>
+          <span
+            class="material-symbols-outlined pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+            keyboard_arrow_down
+          </span>
+        </div>
+      </div>
+      <div class="pt-6 flex justify-end">
+        <button type="submit" id="update-seller-btn"
+          class="w-48 flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out">
+          <span id="btn-text" class="">Update Seller</span>
+          <div id="loading-spinner" class="hidden">
+            <span class="material-symbols-outlined animate-spin text-white text-xl">
+              progress_activity
+            </span>
+          </div>
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block js %}
+<script>
+  const indianStates = {{ INDIAN_STATES | tojson }};
+  const seller_status_data = {{ APPROVAL_STATUSES | tojson }};
+
+  const stateDropdown = document.getElementById('state');
+  const businessStateDropdown = document.getElementById('business_state');
+  const sellerStatus = document.getElementById('seller_status');
+  const currentState = "{{ seller_data.address.state | default('') }}";
+  const currentBusinessState = "{{ seller_data.business_address.state | default('') }}";
+  const currentSellerStatus = "{{ seller_data.seller.is_approved | default('') }}";
+  const address_proof_type = "{{ seller_data.identification.address_proof_id_type | default('') }}";
+  const business_type = "{{ seller_data.seller.businessType | default('') }}";
+  const selectAddressProofElement = document.getElementById("address_proof_id_type");
+  const selectBusinessTypeElement = document.getElementById("business_type");
+  const updateBtn = document.getElementById('update-seller-btn');
+  const selectedBusinessType = "{{ seller_data.business_address.type | default('') }}";
+
+  const businessOptions = document.querySelectorAll('#business-type-options .option');
+  const hiddenInput = document.getElementById('business_address_type_input');
+
+  const options = document.querySelectorAll('#business-type-options .option');
+
+  // Initialize form change tracking
+  let formChanged = false;
+
+  // Function to toggle button state
+  function toggleUpdateButton() {
+    console.log('toggleUpdateButton called, formChanged:', formChanged);
+    if (formChanged) {
+      updateBtn.disabled = false;
+      updateBtn.classList.add('bg-indigo-600', 'hover:bg-indigo-700');
+      updateBtn.classList.remove('bg-gray-400', 'cursor-not-allowed', 'opacity-50');
+      console.log('Button enabled, disabled:', updateBtn.disabled, 'classes:', updateBtn.className);
+    } else {
+      updateBtn.disabled = true;
+      updateBtn.classList.remove('bg-indigo-600', 'hover:bg-indigo-700');
+      updateBtn.classList.add('bg-gray-400', 'cursor-not-allowed', 'opacity-50');
+      console.log('Button disabled, disabled:', updateBtn.disabled, 'classes:', updateBtn.className);
+    }
+  }
+
+  // Call toggleUpdateButton initially to set correct state
+  toggleUpdateButton();
+
+  // Track changes in all form inputs
+  const formInputs = document.querySelectorAll('input, select, textarea');
+  formInputs.forEach((input, index) => {
+    input.addEventListener('change', () => {
+      console.log(`Change event on input ${index}:`, input.name, 'value:', input.value);
+      formChanged = true;
+      toggleUpdateButton();
+    });
+    input.addEventListener('input', () => {
+      console.log(`Input event on input ${index}:`, input.name, 'value:', input.value);
+      formChanged = true;
+      toggleUpdateButton();
+    });
+  });
+
+  // Track changes in business address type options
+  options.forEach((option, index) => {
+    option.addEventListener('click', () => {
+      console.log(`Business address type option ${index} clicked:`, option.dataset.value);
+      formChanged = true;
+      toggleUpdateButton();
+      options.forEach(o => o.classList.remove('bg-indigo-500', 'text-white', 'border-indigo-500'));
+      option.classList.add('bg-indigo-500', 'text-white', 'border-indigo-500');
+      hiddenInput.value = option.dataset.value;
+      console.log('Hidden input value:', hiddenInput.value);
+    });
+  });
+
+  businessOptions.forEach(option => {
+    if (option.dataset.value === selectedBusinessType) {
+      option.classList.add('bg-indigo-500', 'text-white', 'border-indigo-500');
+      hiddenInput.value = selectedBusinessType;
+    }
+  });
+
+  if (selectAddressProofElement) {
+    selectAddressProofElement.value = address_proof_type;
+    console.log('Address proof type set:', address_proof_type);
+  }
+  if (selectBusinessTypeElement) {
+    selectBusinessTypeElement.value = business_type;
+  }
+
+  function populateStateDropdown(dropdown, selectedValue) {
+    dropdown.innerHTML = '<option value="">Select a state</option>';
+    indianStates.forEach(state => {
+      const option = document.createElement('option');
+      option.value = state;
+      option.textContent = state;
+      if (state === selectedValue) {
+        option.selected = true;
+      }
+      dropdown.appendChild(option);
+    });
+  }
+
+  function populateSellerStatus(dropdown, selectedValue) {
+    dropdown.innerHTML = '<option value="">Select a status</option>';
+    seller_status_data.forEach(state => {
+      const option = document.createElement('option');
+      option.value = state;
+      option.textContent = state.charAt(0).toUpperCase() + state.slice(1).toLowerCase();
+      if (state === selectedValue) {
+        option.selected = true;
+      }
+      dropdown.appendChild(option);
+    });
+  }
+
+  populateStateDropdown(stateDropdown, currentState);
+  populateStateDropdown(businessStateDropdown, currentBusinessState);
+  populateSellerStatus(sellerStatus, currentSellerStatus);
+
+  const formData = {};
+  function validateCurrentStep() {
+    const personalInfo = validatePersonalInfo();
+    const businessInfo = validateBusinessInfo();
+    const businessDetails = validateBusinessDetails();
+
+    if (personalInfo && businessInfo && businessDetails) {
+      formData.personalInfo = personalInfo;
+      formData.businessInfo = businessInfo;
+      formData.businessDetails = businessDetails;
+      console.log('Form validated successfully:', formData);
+      return true;
+    }
+    return false;
+  }
+
+  updateBtn.addEventListener('click', async function (e) {
+    e.preventDefault();
+    console.log('Update button clicked, formChanged:', formChanged);
+    document.getElementById('loading-spinner').classList.remove('hidden');
+    document.getElementById('btn-text').classList.add('hidden');
+    if (!validateCurrentStep()) {
+      document.getElementById('loading-spinner').classList.add('hidden');
+      document.getElementById('btn-text').classList.remove('hidden');
+      return;
+    }
+
+    const apiFormData = new FormData();
+    apiFormData.append('seller_id', "{{ seller_data.seller.id }}");
+
+    const personalInfo = formData.personalInfo;
+    apiFormData.append('email', personalInfo.email);
+    apiFormData.append('first_name', personalInfo.first_name);
+    apiFormData.append('last_name', personalInfo.last_name);
+    apiFormData.append('phoneNumber', personalInfo.phoneNumber);
+    apiFormData.append('address[line1]', personalInfo.address.line1);
+    apiFormData.append('address[streetLine2]', personalInfo.address.streetLine2 || '');
+    apiFormData.append('address[city]', personalInfo.address.city);
+    apiFormData.append('address[state]', personalInfo.address.state);
+    apiFormData.append('address[postal_code]', personalInfo.address.postal_code);
+    apiFormData.append('address[country]', personalInfo.address.country);
+    apiFormData.append('address[type]', personalInfo.address.type || 'Home');
+
+    const businessInfo = formData.businessInfo;
+    apiFormData.append('businessName', businessInfo.businessName);
+    apiFormData.append('businessEmail', businessInfo.businessEmail);
+    apiFormData.append('businessMobile', businessInfo.businessMobile);
+    apiFormData.append('gstNumber', businessInfo.gstNumber);
+
+    if (businessInfo.businessAddress && businessInfo.businessAddress.line1) {
+      apiFormData.append('businessAddress[line1]', businessInfo.businessAddress.line1);
+      apiFormData.append('businessAddress[streetLine2]', businessInfo.businessAddress.streetLine2 || '');
+      apiFormData.append('businessAddress[city]', businessInfo.businessAddress.city);
+      apiFormData.append('businessAddress[state]', businessInfo.businessAddress.state);
+      apiFormData.append('businessAddress[postal_code]', businessInfo.businessAddress.postal_code);
+      apiFormData.append('businessAddress[country]', businessInfo.businessAddress.country);
+      apiFormData.append('businessAddress[type]', businessInfo.businessAddress.type || 'Business');
+    }
+
+    const businessDetails = formData.businessDetails;
+    apiFormData.append('addressProofIdType', businessDetails.addressProofIdType);
+    apiFormData.append('idNumber', businessDetails.idNumber);
+    apiFormData.append('panNumber', businessDetails.panNumber);
+    apiFormData.append('is_approved', sellerStatus.value);
+
+    apiFormData.append('panCardFront', formData.businessDetails.panCardFront);
+    apiFormData.append('addressProofFront', formData.businessDetails.addressProofFront);
+
+    const result = await sendPostRequest('/user/seller/update', apiFormData, 'PUT');
+
+    if (result.success) {
+      showToast('Seller updated successfully!', 'success');
+      setTimeout(() => {
+        window.location.href = "{{ url_for('admin_api.get_seller_list') }}";
+      }, 100);
+      document.getElementById('loading-spinner').classList.add('hidden');
+      document.getElementById('btn-text').classList.remove('hidden');
+      console.log('Update successful');
+    } else {
+      document.getElementById('loading-spinner').classList.add('hidden');
+      document.getElementById('btn-text').classList.remove('hidden');
+      if (result.errors) {
+        const errorMessages = Object.entries(result.errors)
+          .map(([field, message]) => `${field.charAt(0).toUpperCase() + field.slice(1)}: ${message}`)
+          .join('\n');
+        showToast(`${errorMessages}`, 'error');
+        console.log('Update failed with errors:', result.errors);
+      } else {
+        showToast(`${result.message}`, 'error');
+        console.log('Update failed with message:', result.message);
+      }
+    }
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,143 @@
+{% block content %}
+<header class="w-full bg-white shadow-sm border-b border-gray-200 sticky top-0 z-20">
+  <div class="p-5 flex items-center justify-between">
+    <!-- Left side - Hamburger and Logo -->
+    <div class="flex items-center space-x-4">
+      <!-- Hamburger Icon - Only visible on mobile -->
+      <button id="hamburgerIcon" class="lg:hidden focus:outline-none">
+        <span class="material-symbols-outlined text-gray-700 hover:text-indigo-600 text-3xl">
+          menu
+        </span>
+      </button>
+
+      <!-- Logo -->
+      <div class="flex items-center">
+        <img src="{{ url_for('static', filename='images/mainLogo.png') }}" alt="Logo" class="h-8 hidden lg:block">
+        <img src="{{ url_for('static', filename='images/mainBackground.png') }}" alt="Mobile Logo"
+          class="h-8 lg:hidden">
+      </div>
+    </div>
+
+    <!-- Right side - User controls -->
+    <div class="flex items-center space-x-6">
+      <!-- Notification Bell -->
+      <div class="relative">
+        <button id="notificationButton" class="relative p-1 focus:outline-none">
+          <i class="bi bi-bell text-xl text-gray-600 hover:text-indigo-600 transition-colors"></i>
+          <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
+        </button>
+
+        <!-- Notification Dropdown (hidden by default) -->
+        {% include "admin/dashboardPage/notification.html" %}
+
+      </div>
+
+      <!-- User Profile Dropdown -->
+      <div class="relative" id="profileDropdown">
+        <button onclick="toggleDropdown()" class="flex items-center space-x-2 focus:outline-none">
+          {% if g.current_user is defined and g.current_user.profile_pic %}
+          <img src="{{ user.profile_pic }}" alt="Profile" class="w-8 h-8 rounded-full object-cover">
+          {% else %}
+          <i class="bi bi-person-circle text-gray-700 text-3xl"></i>
+          {% endif %}
+          <span class="hidden md:inline text-gray-700 font-medium">{{ g.current_user.email }}</span>
+          <i class="bi bi-chevron-down text-xs text-gray-500 hidden md:inline"></i>
+        </button>
+
+        <!-- Dropdown Menu -->
+        <div id="dropdownMenu"
+          class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
+          <a href="/profile"
+            class="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors flex items-center space-x-2">
+            <i class="bi bi-person text-gray-500"></i>
+            <span>Profile</span>
+          </a>
+          <button onclick="handleLogout()"
+            class="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors flex items-center space-x-2">
+            <i class="bi bi-box-arrow-right text-gray-500"></i>
+            <span>Logout</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<script>
+  function toggleDropdown() {
+    document.getElementById('dropdownMenu').classList.toggle('hidden');
+  }
+
+
+  async function handleLogout() {
+    const result = await sendPostRequest('/api/auth/logout', {});
+    if (result.success) {
+      window.location.href = '/login';
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    // Initialize sidebar functionality
+    const hamburger = document.getElementById('hamburgerIcon');
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+
+    if (hamburger && sidebar && overlay) {
+      function toggleSidebar() {
+        const isOpen = sidebar.classList.contains('-translate-x-full');
+        sidebar.classList.toggle('-translate-x-full', !isOpen);
+        overlay.classList.toggle('opacity-0', !isOpen);
+        overlay.classList.toggle('pointer-events-none', !isOpen);
+        localStorage.setItem('sidebarOpen', isOpen);
+      }
+
+      function initSidebar() {
+        if (window.innerWidth >= 1024) {
+          sidebar.classList.remove('-translate-x-full');
+          overlay.classList.add('opacity-0', 'pointer-events-none');
+        } else {
+          const isOpen = localStorage.getItem('sidebarOpen') === 'true';
+          sidebar.classList.toggle('-translate-x-full', !isOpen);
+          overlay.classList.toggle('opacity-0', !isOpen);
+          overlay.classList.toggle('pointer-events-none', !isOpen);
+        }
+      }
+
+      hamburger.addEventListener('click', toggleSidebar);
+      overlay.addEventListener('click', toggleSidebar);
+      window.addEventListener('resize', initSidebar);
+      initSidebar();
+    }
+
+    // Notification dropdown functionality
+    const notificationButton = document.getElementById('notificationButton');
+    const notificationDropdown = document.getElementById('notificationDropdown');
+
+    if (notificationButton && notificationDropdown) {
+      notificationButton.addEventListener('click', function (e) {
+        e.stopPropagation();
+        notificationDropdown.classList.toggle('hidden');
+      });
+
+      // Close when clicking outside
+      document.addEventListener('click', function (e) {
+        if (!notificationDropdown.contains(e.target) && e.target !== notificationButton) {
+          notificationDropdown.classList.add('hidden');
+        }
+      });
+    }
+
+    // Profile dropdown click outside handler
+    const profileDropdown = document.getElementById('profileDropdown');
+    const dropdownMenu = document.getElementById('dropdownMenu');
+
+    if (profileDropdown && dropdownMenu) {
+      document.addEventListener('click', function (e) {
+        if (!profileDropdown.contains(e.target)) {
+          dropdownMenu.classList.add('hidden');
+        }
+      });
+    }
+  });
+</script>
+{% endblock %}
