@@ -17,24 +17,21 @@ def login_page():
 
         email = request.form.get('email', '').strip()
         password = request.form.get('password', '')
-        fcm_token = request.form.get('fcm_token', '').strip()  # ← Get FCM token
 
         if not email or not password:
             return create_error_response({'error': 'Email and password required'}, 400)
 
         try:
             user = User.objects(email=email).first()
-
+            
             if not user or not user.check_password(password):
                 return create_error_response({'error': 'Invalid credentials'}, 401)
+                
+            # if not user.is_admin:
+            #     return jsonify({'error': 'Admin access required'}), 403
 
-            # Save FCM token
-            if fcm_token:
-                user.fcm_token = fcm_token
-                user.save()
-
-            # Set session values
             session['user_id'] = str(user.id)
+            # session['is_admin'] = True
             session['email'] = user.email
 
             return jsonify({
@@ -42,7 +39,6 @@ def login_page():
                 'user': {
                     'id': str(user.id),
                     'email': user.email,
-                    'fcm_token': user.fcm_token
                 }
             })
 

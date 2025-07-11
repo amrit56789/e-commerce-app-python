@@ -1,6 +1,8 @@
 import os
 from dotenv import load_dotenv
-from urllib.parse import quote_plus
+import cloudinary
+import cloudinary.uploader
+from urllib.parse import quote_plus 
 import razorpay
 
 load_dotenv()
@@ -24,14 +26,27 @@ class Config:
     MAIL_USERNAME = os.getenv('MAIL_USERNAME')
     MAIL_PASSWORD = os.getenv('MAIL_PASSWORD')
     MAIL_DEFAULT_SENDER = os.getenv('MAIL_DEFAULT_SENDER')
-
+    
+    # Cloudinary configuration
+    CLOUDINARY_CLOUD_NAME = os.getenv('CLOUDINARY_CLOUD_NAME')
+    CLOUDINARY_API_KEY = os.getenv('CLOUDINARY_API_KEY')
+    CLOUDINARY_API_SECRET = os.getenv('CLOUDINARY_API_SECRET')
+    
     # Razorpay configuration
     RAZORPAY_KEY_ID = os.getenv('RAZORPAY_KEY_ID')
     RAZORPAY_KEY_SECRET = os.getenv('RAZORPAY_KEY_SECRET')
-
+    
     SERVER_PORT = int(os.getenv('SERVER_PORT', 8080))
     ENVIRONMENT = os.getenv('ENVIRONMENT', 'development')
 
     @classmethod
     def init_app(cls, app):
+        # Initialize Cloudinary
+        cloudinary.config(
+            cloud_name=cls.CLOUDINARY_CLOUD_NAME,
+            api_key=cls.CLOUDINARY_API_KEY,
+            api_secret=cls.CLOUDINARY_API_SECRET
+        )
+        
+        # Initialize Razorpay
         app.razorpay_client = razorpay.Client(auth=(cls.RAZORPAY_KEY_ID, cls.RAZORPAY_KEY_SECRET))

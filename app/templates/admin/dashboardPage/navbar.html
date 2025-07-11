@@ -21,16 +21,10 @@
     <!-- Right side - User controls -->
     <div class="flex items-center space-x-6">
       <!-- Notification Bell -->
-      <div class="relative">
-        <button id="notificationButton" class="relative p-1 focus:outline-none">
-          <i class="bi bi-bell text-xl text-gray-600 hover:text-indigo-600 transition-colors"></i>
-          <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
-        </button>
-
-        <!-- Notification Dropdown (hidden by default) -->
-        {% include "admin/dashboardPage/notification.html" %}
-
-      </div>
+      <button class="relative p-1 focus:outline-none">
+        <i class="bi bi-bell text-xl text-gray-600 hover:text-indigo-600 transition-colors"></i>
+        <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
+      </button>
 
       <!-- User Profile Dropdown -->
       <div class="relative" id="profileDropdown">
@@ -68,6 +62,13 @@
     document.getElementById('dropdownMenu').classList.toggle('hidden');
   }
 
+  // Close dropdown when clicking outside
+  document.addEventListener('click', function (event) {
+    const dropdown = document.getElementById('profileDropdown');
+    if (!dropdown.contains(event.target)) {
+      document.getElementById('dropdownMenu').classList.add('hidden');
+    }
+  });
 
   async function handleLogout() {
     const result = await sendPostRequest('/api/auth/logout', {});
@@ -75,69 +76,75 @@
       window.location.href = '/login';
     }
   }
+</script>
 
+<script>
   document.addEventListener('DOMContentLoaded', function () {
-    // Initialize sidebar functionality
     const hamburger = document.getElementById('hamburgerIcon');
     const sidebar = document.getElementById('sidebar');
     const overlay = document.getElementById('sidebarOverlay');
+    const mainContent = document.getElementById('mainContent');
 
-    if (hamburger && sidebar && overlay) {
-      function toggleSidebar() {
-        const isOpen = sidebar.classList.contains('-translate-x-full');
+    // Toggle sidebar
+    function toggleSidebar() {
+      const isOpen = sidebar.classList.contains('-translate-x-full');
+      sidebar.classList.toggle('-translate-x-full', !isOpen);
+      overlay.classList.toggle('opacity-0', !isOpen);
+      overlay.classList.toggle('pointer-events-none', !isOpen);
+
+      // Store state in localStorage
+      localStorage.setItem('sidebarOpen', isOpen);
+    }
+
+    // Initialize sidebar state
+    function initSidebar() {
+      if (window.innerWidth >= 1024) {
+        // Desktop - always open
+        sidebar.classList.remove('-translate-x-full');
+        overlay.classList.add('opacity-0', 'pointer-events-none');
+      } else {
+        // Mobile - check localStorage
+        const isOpen = localStorage.getItem('sidebarOpen') === 'true';
         sidebar.classList.toggle('-translate-x-full', !isOpen);
         overlay.classList.toggle('opacity-0', !isOpen);
         overlay.classList.toggle('pointer-events-none', !isOpen);
-        localStorage.setItem('sidebarOpen', isOpen);
       }
+    }
 
-      function initSidebar() {
-        if (window.innerWidth >= 1024) {
-          sidebar.classList.remove('-translate-x-full');
-          overlay.classList.add('opacity-0', 'pointer-events-none');
-        } else {
-          const isOpen = localStorage.getItem('sidebarOpen') === 'true';
-          sidebar.classList.toggle('-translate-x-full', !isOpen);
-          overlay.classList.toggle('opacity-0', !isOpen);
-          overlay.classList.toggle('pointer-events-none', !isOpen);
-        }
+    // Event listeners
+    hamburger.addEventListener('click', toggleSidebar);
+    overlay.addEventListener('click', toggleSidebar);
+
+    // Close sidebar when clicking outside on mobile
+    document.addEventListener('click', function (event) {
+      if (window.innerWidth >= 1024) return;
+
+      const isClickInsideSidebar = sidebar.contains(event.target);
+      const isClickOnHamburger = hamburger.contains(event.target);
+      const isClickOnSubmenu = event.target.closest('.toggle-submenu');
+
+      if (!isClickInsideSidebar && !isClickOnHamburger && !isClickOnSubmenu && !sidebar.classList.contains('-translate-x-full')) {
+        toggleSidebar();
       }
+    });
 
-      hamburger.addEventListener('click', toggleSidebar);
-      overlay.addEventListener('click', toggleSidebar);
-      window.addEventListener('resize', initSidebar);
-      initSidebar();
-    }
+    // Handle window resize
+    window.addEventListener('resize', function () {
+      if (window.innerWidth >= 1024) {
+        // Desktop - ensure sidebar is open
+        sidebar.classList.remove('-translate-x-full');
+        overlay.classList.add('opacity-0', 'pointer-events-none');
+      } else {
+        // Mobile - maintain state
+        const isOpen = localStorage.getItem('sidebarOpen') === 'true';
+        sidebar.classList.toggle('-translate-x-full', !isOpen);
+        overlay.classList.toggle('opacity-0', !isOpen);
+        overlay.classList.toggle('pointer-events-none', !isOpen);
+      }
+    });
 
-    // Notification dropdown functionality
-    const notificationButton = document.getElementById('notificationButton');
-    const notificationDropdown = document.getElementById('notificationDropdown');
-
-    if (notificationButton && notificationDropdown) {
-      notificationButton.addEventListener('click', function (e) {
-        e.stopPropagation();
-        notificationDropdown.classList.toggle('hidden');
-      });
-
-      // Close when clicking outside
-      document.addEventListener('click', function (e) {
-        if (!notificationDropdown.contains(e.target) && e.target !== notificationButton) {
-          notificationDropdown.classList.add('hidden');
-        }
-      });
-    }
-
-    // Profile dropdown click outside handler
-    const profileDropdown = document.getElementById('profileDropdown');
-    const dropdownMenu = document.getElementById('dropdownMenu');
-
-    if (profileDropdown && dropdownMenu) {
-      document.addEventListener('click', function (e) {
-        if (!profileDropdown.contains(e.target)) {
-          dropdownMenu.classList.add('hidden');
-        }
-      });
-    }
+    // Initialize
+    initSidebar();
   });
 </script>
 {% endblock %}

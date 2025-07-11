@@ -5,8 +5,6 @@ from app.models import User
 import os
 from app.utils.sidebar import sidebar_context
 from flask_cors import CORS
-import firebase_admin
-from firebase_admin import credentials, messaging
 
 def create_app(config_class=Config):
     app = Flask(__name__)
@@ -36,7 +34,6 @@ def create_app(config_class=Config):
     from app.models.brands import ProductBrands
     from app.seed_data import seed_data
 
-    
     sidebar_context(app)
     with app.app_context():
         Role.initialize_roles()
@@ -85,9 +82,8 @@ def create_app(config_class=Config):
 
     from app.utils.image_upload import image_store
     import base64
-    # from flask import Response, send_from_directory
-    # cred = credentials.Certificate("./serviceAccountKey.json")
-    # firebase_admin.initialize_app(cred)
+    from flask import Response, send_from_directory
+
     @app.route('/image/<image_id>')
     def serve_image(image_id):
         image_info = image_store.get(image_id)

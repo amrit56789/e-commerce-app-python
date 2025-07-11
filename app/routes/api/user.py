@@ -114,3 +114,4 @@ def delete_profile_picture():
 
     except Exception as e:
         return create_error_response({"error": "Deletion failed", "details": str(e)}, 500)
+

@@ -18,37 +18,72 @@ def add_to_wishlist():
     user_id = get_jwt_identity()
     user = User.objects(id=user_id).first()
 
+    # Data validation
     try:
         data = request.get_json()
+        if not data:
+            return create_error_response({"error": "No data provided"}, 400)
     except Exception:
         return create_error_response({"error": "Invalid JSON data"}, 400)
 
+    # Required fields validation
     required_fields = ['product_id', 'selected_size', 'selected_color']
     is_valid, validation_errors = validate_required_fields(data, required_fields)
     if not is_valid:
         return create_error_response({"error": validation_errors}, 400)
 
-    product_id = data['product_id']
-    selected_size = data['selected_size']
-    selected_color = data['selected_color']
-    quantity = int(data.get('quantity', 1))
+    # Input sanitization
+    product_id = data['product_id'].strip()
+    selected_size = data['selected_size'].strip().upper()
+    selected_color = data['selected_color'].strip().lower()
+    quantity = max(1, int(data.get('quantity', 1)))  # Ensure minimum quantity of 1
 
+    # Size validation
     if selected_size not in ALLOWED_SIZES:
-        return create_error_response({"error": f"Invalid size. Must be one of {ALLOWED_SIZES}"}, 400)
+        return create_error_response(
+            {"error": f"Invalid size. Must be one of {ALLOWED_SIZES}"}, 
+            400
+        )
 
-    product = Products.objects(id=product_id).first()
+    # Product existence check
+    if not ObjectId.is_valid(product_id):
+        return create_error_response({"error": "Invalid product ID format"}, 400)
+
+    product = Products.objects(id=product_id, status='active').first()
     if not product:
-        return create_error_response({"error": "Product not found"}, 404)
+        return create_error_response({"error": "Product not found or inactive"}, 404)
 
+    # Variant availability check
     variant = ProductVariant.objects(
+        product_id=product_id,
+        size=selected_size,
+        color_hexa_code=selected_color,
+        stock_quantity__gt=0  # Only consider in-stock variants
+    ).first()
+
+    if not variant:
+        return create_error_response({
+            "error": "Variant not available",
+            "details": "The selected size/color combination is either invalid or out of stock"
+        }, 404)
+
+    # Check if already in cart (optional business logic)
+    in_cart = CartItem.objects(
+        user_id=user_id,
         product_id=product_id,
         size=selected_size,
         color_hexa_code=selected_color
     ).first()
 
-    if not variant:
-        return create_error_response({"error": "Variant not found for the specified product, size, and color"}, 404)
+    # Wishlist limit check (e.g., max 50 items)
+    wishlist_count = WishlistItem.objects(user_id=user_id).count()
+    if wishlist_count >= 50:
+        return create_error_response({
+            "error": "Wishlist limit reached",
+            "message": "Maximum 50 items allowed in wishlist"
+        }, 400)
 
+    # Check for existing wishlist item
     existing_item = WishlistItem.objects(
         user_id=user_id,
         product_id=product_id,
@@ -56,9 +91,13 @@ def add_to_wishlist():
         color_hexa_code=selected_color
     ).first()
 
+    # Update or create wishlist item
     if existing_item:
-        existing_item.quantity += quantity
-        existing_item.save()
+        existing_item.update(
+            quantity=min(existing_item.quantity + quantity, 10),  # Max 10 per item
+            last_updated=datetime.utcnow()
+        )
+        action = "updated"
     else:
         wishlist_item = WishlistItem(
             user_id=user_id,
@@ -66,28 +105,60 @@ def add_to_wishlist():
             size=selected_size,
             color=variant.color,
             color_hexa_code=variant.color_hexa_code,
-            quantity=quantity
+            quantity=quantity,
+            product_data={
+                "name": product.name,
+                "price": product.price,
+                "image": variant.images[0].image_url if variant.images else None
+            }
         )
         wishlist_item.save()
+        action = "added"
 
-    wishlist_items = WishlistItem.objects(user_id=user_id)
+    # Log wishlist activity
+    WishlistActivityLog(
+        user_id=user_id,
+        product_id=product_id,
+        action="add",
+        variant_data={
+            "size": selected_size,
+            "color": selected_color
+        }
+    ).save()
 
+    # Prepare response with enhanced product data
+    wishlist_items = WishlistItem.objects(user_id=user_id).order_by('-added_at')
+    
     response_data = {
-        "message": "Item added to wishlist",
-        "data": [
-            {
-                "id": str(item.id),
-                "product_id": str(item.product_id),
-                "size": item.size,
-                "color": item.color,
-                "color_hexa_code": item.color_hexa_code,
-                "quantity": item.quantity,
-                "added_at": item.added_at.isoformat()
-            } for item in wishlist_items
-        ]
+        "message": f"Item {action} to wishlist successfully",
+        "data": [wishlist_item_to_dict(item) for item in wishlist_items],
+        "metadata": {
+            "wishlist_count": wishlist_count + (0 if existing_item else 1),
+            "in_cart": bool(in_cart),
+            "product_available": variant.stock_quantity > 0
+        }
     }
 
     return jsonify(response_data), 200
+
+def wishlist_item_to_dict(item):
+    return {
+        "id": str(item.id),
+        "product_id": str(item.product_id.id),
+        "product_name": getattr(item.product_data, 'name', ''),
+        "product_price": float(getattr(item.product_data, 'price', 0)),
+        "product_image": url_for(
+            'serve_uploaded_files', 
+            filename=getattr(item.product_data, 'image', ''),
+            _external=True
+        ) if getattr(item.product_data, 'image', None) else None,
+        "size": item.size,
+        "color": item.color,
+        "color_hexa_code": item.color_hexa_code,
+        "quantity": item.quantity,
+        "added_at": item.added_at.isoformat(),
+        "last_updated": item.last_updated.isoformat() if hasattr(item, 'last_updated') else None
+    }
 
 @wishlist_bp.route(WISHLIST_REMOVE, methods=['DELETE'])
 @jwt_required()

@@ -5,7 +5,6 @@ from bson import ObjectId
 from constants import ORDER_LIST_WEB_URL, ORDER_STATUS_UPDATE_WEB_URL, ORDER_STATUS, ORDER_DETAILS_PAGE_WEB_URL
 from app.utils.utils import create_error_response
 from datetime import datetime
-from  app.utils.notifications import send_order_status_notifications
 
 @admin_api.route(ORDER_LIST_WEB_URL, methods=['GET', 'POST'])
 def product_order_list_page():    
@@ -197,17 +196,17 @@ def update_order_status(order_id):
         if status not in valid_statuses:
             return create_error_response({'error': 'Invalid status'}, 400)
 
-        previous_status = order.status
         order.status = status
         order.save()
-        if previous_status != status:
-            send_order_status_notifications(order, status, user)
+        
+        print(f"Order {order_id} status updated to {status} by user {user.id}")
         
         return jsonify({'success': True, 'status': status})
 
     except Exception as e:
         print(f"Error updating order status: {str(e)}")
         return create_error_response({'error': f'Server error: {str(e)}'}, 500)
+
 
 @admin_api.route(ORDER_DETAILS_PAGE_WEB_URL, methods=['GET'])
 def order_details_page(order_id):

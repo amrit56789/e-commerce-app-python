@@ -22,7 +22,6 @@ class User(db.Document):
     referred_by = db.ReferenceField('self')
     otp_expiry = db.DateTimeField()
     profile_pic = db.StringField()
-    fcm_token = db.StringField()
     cloudinary_id = db.StringField()
     is_admin = db.BooleanField(default=False)
     is_email_verified = db.BooleanField(default=False)
